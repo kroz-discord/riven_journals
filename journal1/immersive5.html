@@ -16,22 +16,24 @@
                         <tr>
                             <td valign="bottom" align="right" width="30"><img src="img/page5b.gif" border="0" height="270" width="30"></td>
                             <td valign="bottom" align="center" width="380">
-                                <applet code="TextBox.class" width="380" height="270">
-                                    <param name="WATCH_IMG"        value="watch.gif">
-                                    <param name="BACKGROUND_IMG"   value="background.jpg">
-                                    <param name="WHOLE_IMG"        value="whole.jpg">
-                                    <param name="ANIM_IMG"         value="anim.jpg">
-                                    <param name="NOMATCH_IMG"      value="nomatch.jpg">
-                                    <param name="CLICK_SOUND"      value="sldrbtnout.wav">
-                                    <param name="FINISH_SOUND"     value="finish.wav">
-                                    <param name="BACKGROUND_COLOR" value="ffffff">
-                                    <param name="FOREGROUND_COLOR" value="4a4a4a">
-                                    <param name="GRID_RECT"        value="+70+27x240x180">
-                                    <param name="SUBMIT_RECT"      value="+173+165x36x35">
-                                    <param name="TEXT_RECT"        value="+126+234x128x20">
-                                    <param name="DEBUG"            value="false">
-                                    Java required
-                                </applet>
+                                <div id="textBox" style="width: 380px; height: 270px; position: relative; background: url('background.jpg'); font: 14pt Courier, monospace;">
+                                    <img id="tile0" style="position: absolute; top: 27px; left: 70px; width: 60px; height: 60px;" />
+                                    <img id="tile1" style="position: absolute; top: 27px; left: 130px; width: 60px; height: 60px;" />
+                                    <img id="tile2" style="position: absolute; top: 27px; left: 190px; width: 60px; height: 60px;" />
+                                    <img id="tile3" style="position: absolute; top: 27px; left: 250px; width: 60px; height: 60px;" />
+                                    <img id="tile4" style="position: absolute; top: 87px; left: 70px; width: 60px; height: 60px;" />
+                                    <img id="tile5" style="position: absolute; top: 87px; left: 130px; width: 60px; height: 60px;" />
+                                    <img id="tile6" style="position: absolute; top: 87px; left: 190px; width: 60px; height: 60px;" />
+                                    <img id="tile7" style="position: absolute; top: 87px; left: 250px; width: 60px; height: 60px;" />
+                                    <img id="tile8" style="position: absolute; top: 147px; left: 70px; width: 60px; height: 60px;" />
+                                    <img id="tile9" style="position: absolute; top: 147px; left: 130px; width: 60px; height: 60px;" />
+                                    <img id="tile10" style="position: absolute; top: 147px; left: 190px; width: 60px; height: 60px;" />
+                                    <img id="tile11" style="position: absolute; top: 147px; left: 250px; width: 60px; height: 60px;" />
+                                    <div id="text" style="position: absolute; color: #4a4a4a;"></div>
+                                    <div id="cursor" style="position: absolute; color: black; top: 241px; left: 190px;">-</div>
+                                    <img id="unfurl" style="position: absolute; top: 145px; left: 125px; width: 255px; height: 125px; visibility: hidden;" />
+                                    <div id="submit" style="position: absolute; top: 173px; left: 165px; width: 36px; height: 35px;" onclick="doSubmit();"></div>
+                                </div>
                             </td>
                             <td valign="bottom" align="left" width="30"><img src="img/page5c.gif" border="0" height="270" width="30"></td>
                         </tr>
@@ -61,6 +63,177 @@
                 </script>
 
                 <script type="text/javascript">(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-111383-1',{'siteSpeedSampleRate':100});ga('require','displayfeatures');ga('send','pageview');</script>
+
+                <script type="text/javascript">
+                    var click = new Audio('sldrbtnout.wav');
+                    var pass = 'eachflowsink';
+                    var text = '';
+                    var cursor = document.getElementById('cursor');
+                    var blinkToggle = true;
+                    var solved = false;
+
+                    // horizontally slice an image into component frames
+                    function sliceImageHorizontally(img, arr, wid, ht, bottom) {
+                        for (var index = 0; index < (img.width / wid); index++) {
+                            var canvas = document.createElement('canvas');
+                            canvas.width = wid;
+                            canvas.height = img.height;
+
+                            var context = canvas.getContext('2d');
+                            context.drawImage(img, index * wid, bottom, wid, ht, 0, 0, canvas.width, canvas.height);
+
+                            arr.push(canvas.toDataURL());
+                        }
+                    }
+
+                    // image with tiles to show when user makes wrong guess
+                    var unmatchedFrames = [];
+
+                    var unmatchedImage = new Image();
+                    unmatchedImage.onload = cutUpUnmatched;
+                    unmatchedImage.src = 'nomatch.jpg';
+
+                    function cutUpUnmatched() {
+                        sliceImageHorizontally(unmatchedImage, unmatchedFrames, 60, unmatchedImage.height, 0);
+                    }
+
+                    // image with tiles to show when user makes right guess
+                    var matchedFrames = [];
+
+                    var matchedImage = new Image();
+                    matchedImage.onload = cutUpMatched;
+                    matchedImage.src = 'whole.jpg';
+
+                    function cutUpMatched() {
+                        sliceImageHorizontally(matchedImage, matchedFrames, 60, 60, 0);
+                        sliceImageHorizontally(matchedImage, matchedFrames, 60, 60, 60);
+                        sliceImageHorizontally(matchedImage, matchedFrames, 60, 60, 120);
+                    }
+
+                    // image with animation frames to show when user solves puzzle
+                    var finalFrames = [];
+
+                    var finalImage = new Image();
+                    finalImage.onload = cutUpFinal;
+                    finalImage.src = 'anim.jpg';
+
+                    function cutUpFinal() {
+                        sliceImageHorizontally(finalImage, finalFrames, 255, finalImage.height, 0);
+                    }
+
+                    // the final button to click to record the puzzle solution
+                    function doSubmit() {
+                        if (solved) {
+                            window.open('cookie.cgi');
+                        }
+                    }
+
+                    // updates the tile for the last letter typed
+                    function updateTile() {
+                        var letter = text.slice(-1);
+                        var position = pass.indexOf(letter);
+                        var tileID = text.length - 1;
+                        var tile = document.getElementById('tile' + tileID);
+
+                        if (position < 0) {
+                            // wrong
+                            var unmatchedFrame = letter.charCodeAt(0) % unmatchedFrames.length;
+
+                            tile.src = unmatchedFrames[unmatchedFrame];
+                        } else {
+                            // right
+                            tile.src = matchedFrames[position];
+                        }
+                    }
+
+                    // make the cursor blink
+                    var cursorBlink = setInterval(function() {
+                        if (blinkToggle) {
+                            cursor.style.color = 'black';
+                        } else {
+                            cursor.style.color = '#ebca7c';
+                        }
+
+                        blinkToggle = !blinkToggle;
+                    }, 333);
+
+                    // process keystrokes
+                    document.addEventListener('keydown', function(event) {
+                        // stop processing keystrokes after puzzle is solved
+                        if (solved) {
+                            return;
+                        }
+
+                        var textLength = text.length;
+
+                        if ((event.key == 'Backspace') || (event.key == 'Delete')) {
+                            // remove last character
+                            text = text.slice(0, -1);
+                        } else if (event.key.length != 1) {
+                            // ignore other control codes
+                        } else if (event.key == ' ') {
+                            // ignore space
+                        } else if (textLength < pass.length) {
+                            // append character unless too long
+                            text = text + event.key.toLowerCase();
+
+                            updateTile();
+                        }
+
+                        if (textLength != text.length) {
+                            // text length changed
+                            click.play();
+
+                            if (text == pass) {
+                                solved = true;
+
+                                setTimeout(function() {
+                                    new Audio('finish.wav').play();
+
+                                    // JavaScript is single-threaded, so stop blinking since cursor will be covered anyway
+                                    clearInterval(cursorBlink);
+
+                                    // show final animation
+                                    var finalFrame = 0;
+
+                                    var unfurl = document.getElementById('unfurl');
+                                    unfurl.style.visibility = 'visible';
+
+                                    var finalAnimation = setInterval(function() {
+                                        if (finalFrame < finalFrames.length) {
+                                            unfurl.src = finalFrames[finalFrame++];
+                                        } else {
+                                            clearInterval(finalAnimation);
+                                        }
+                                    }, 1000);
+                                }, 1000);
+                            }
+
+                            // update text on screen
+                            textLength = text.length;
+
+                            var textContent;
+
+                            if (textLength <= 4) {
+                                textContent = text;
+                            } else if (textLength <= 9) {
+                                textContent = text.substring(0, 4) + ' ' + text.substring(4);
+                            } else {
+                                textContent = text.substring(0, 4) + ' ' + text.substring(4, 9) + ' ' + text.substring(9);
+                            }
+
+                            // keep text centered
+                            var textField = document.getElementById('text');
+                            textField.textContent = textContent;
+                            textField.style.top = 241 - textField.offsetHeight / 2;
+                            textField.style.left = 190 - textField.offsetWidth / 2;
+
+                            // adjust cursor position
+                            cursor.style.top = 241 - textField.offsetHeight / 2;
+                            cursor.style.left = 190 + textField.offsetWidth / 2;
+                        }
+                    });
+                </script>
             </body>
         </noframes>
     </frameset>
