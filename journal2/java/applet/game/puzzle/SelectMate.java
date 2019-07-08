@@ -139,7 +139,7 @@ public class SelectMate extends Applet
             for(int k = 0; k < 5; k++)
                 soundClip[k] = getAudioClip(getURL(topDir + "sounds/" + animalClipFile[k]));
 
-            finalClip = getAudioClip(getURL(topDir + "sounds/final4.au"));
+            finalClip = getAudioClip(getURL(topDir + "sounds/final4.wav"));
             loadGenData();
         }
         if(backgroundColor == null)
@@ -537,7 +537,7 @@ public class SelectMate extends Applet
     private AudioClip finalClip;
     private String topDir;
     private static String animalClipFile[] = {
-        "live.au", "livehalf.au", "livenone.au", "deadhalf.au", "dead.au"
+        "live.wav", "livehalf.wav", "livenone.wav", "deadhalf.wav", "dead.wav"
     };
     private int currentGen;
     private MatePattern currentMatePattern;
