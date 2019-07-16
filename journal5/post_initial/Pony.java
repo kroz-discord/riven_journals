@@ -108,8 +108,8 @@ public class Pony extends Applet
         if(stampAnims == null)
         {
             stamp = loadImage(getURL("images/action.gif"));
-            buttClickNo = getAudioClip(getURL("sounds/stamp_wrong.au"));
-            buttClickYes = getAudioClip(getURL("sounds/stamp.au"));
+            buttClickNo = getAudioClip(getURL("sounds/stamp_wrong.wav"));
+            buttClickYes = getAudioClip(getURL("sounds/stamp.wav"));
             stampAnims = new Image[4][3];
             for(int i = 0; i <= 3; i++)
             {
@@ -145,7 +145,7 @@ public class Pony extends Applet
                     finalAnim[j] = loadImage(getURL("images/final" + (j + 1) + ".jpg"));
 
             }
-            finishClip = getAudioClip(getURL("sounds/stamp_done.au"));
+            finishClip = getAudioClip(getURL("sounds/stamp_done.wav"));
             there = true;
         }
     }

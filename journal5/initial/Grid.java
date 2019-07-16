@@ -108,8 +108,8 @@ public class Grid extends Applet
 
         }
         loaded = true;
-        buttonClick = getAudioClip(getURL("sounds/grid.au"));
-        finishClip = getAudioClip(getURL("sounds/grid_done.au"));
+        buttonClick = getAudioClip(getURL("sounds/grid.wav"));
+        finishClip = getAudioClip(getURL("sounds/grid_done.wav"));
     }
 
     public boolean handleEvent(Event event)
