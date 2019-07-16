@@ -104,19 +104,19 @@ public class MagLev extends Applet
                 whole.flush();
             }
             catch(Exception _ex) { }
-            takeoffClip = getAudioClip(getURL("sounds/takeoff.au"));
+            takeoffClip = getAudioClip(getURL("sounds/takeoff.wav"));
             for(submit = loadImage(getURL("p3-img/final-but.jpg")); !statusImage(submit, 300L); nextWatch());
             for(animation = loadImage(getURL("p3-img/final.jpg")); !statusImage(animation, 300L); nextWatch());
             leftRailRect = getRectParam("LEFTRAIL_RECT");
             rightRailRect = getRectParam("RIGHTRAIL_RECT");
             thrustRect = getRectParam("THRUST_RECT");
             solvedRect = getRectParam("SOLVED_RECT");
-            grindClip = getAudioClip(getURL("sounds/grind.au"));
-            thrust1 = getAudioClip(getURL("sounds/hum1.au"));
-            thrust2 = getAudioClip(getURL("sounds/hum2.au"));
-            thrust3 = getAudioClip(getURL("sounds/hum3.au"));
-            thrust4 = getAudioClip(getURL("sounds/hum4.au"));
-            thrust5 = getAudioClip(getURL("sounds/hum5.au"));
+            grindClip = getAudioClip(getURL("sounds/grind.wav"));
+            thrust1 = getAudioClip(getURL("sounds/hum1.wav"));
+            thrust2 = getAudioClip(getURL("sounds/hum2.wav"));
+            thrust3 = getAudioClip(getURL("sounds/hum3.wav"));
+            thrust4 = getAudioClip(getURL("sounds/hum4.wav"));
+            thrust5 = getAudioClip(getURL("sounds/hum5.wav"));
         }
         if(backgroundColor == null)
         {
