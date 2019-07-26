@@ -1,110 +1,100 @@
 <html>
+    <head>
+        <link rel="prefetch" href="img/render.jpg">
+        <link rel="prefetch" href="img/page4_exta.jpg">
+        <link rel="prefetch" href="img/page4_extb.jpg">
 
-<head><link rel="prefetch" href="img/render.jpg"><link rel="prefetch" href="img/page4_exta.jpg"><link rel="prefetch" href="img/page4_extb.jpg">
-<title>The Riven Journals, Journal Three</title>
-<SCRIPT LANGUAGE = "JavaScript">
-       browserName = navigator.appName;
-       browserVer = parseInt(navigator.appVersion);
-               if (browserName == "Netscape" && browserVer >= 3)
-               version = "n3";
-               else version = "n3";          //[#RJR EDIT] changed n2 to n3 so it works on other browsers
-               
-               if (version == "n3")         {
-               page5_extc_on = new Image(42, 197);
-               page5_extc_on.src = "img/page5_extc_on.jpg";
-               page5_extc_off = new Image(42, 197);
-               page5_extc_off.src = "img/page5_extc_off.jpg";
-               }
+        <title>The Riven Journals, Journal Three</title>
 
-       function img_act(imgName) {
-               if (version == "n3") {
-               imgOn = eval(imgName + "on.src");
-               document [imgName].src = imgOn;
-               }
-       }
+        <script type="text/javascript">
+            browserName = navigator.appName;
+            browserVer = parseInt(navigator.appVersion);
 
-       function img_inact(imgName) {
-               if (version == "n3") {
-               imgOff = eval(imgName + "off.src");
-               document [imgName].src = imgOff;
-               }
-       }
+            if ((browserName == 'Netscape') && (browserVer >= 3)) {
+                version = 'n3';
+            } else {
+                version = 'n3'; // [#RJR EDIT] changed n2 to n3 so it works on other browsers
+            }
 
-</script>
-</head>
-<body bgcolor="#000000">
+            if (version == 'n3') {
+                page5_extc_on = new Image(42, 197);
+                page5_extc_on.src = 'img/page5_extc_on.jpg';
 
-<div align="center">
+                page5_extc_off = new Image(42, 197);
+                page5_extc_off.src = 'img/page5_extc_off.jpg';
+            }
 
-<table border="0" width="540" cellpadding="0" cellspacing="0">
+            function img_act(imgName) {
+                if (version == 'n3') {
+                    imgOn = eval(imgName + 'on.src');
 
-<tr>
-	<td valign="bottom" align="left" width="540" colspan="4"><img 
-	width="540" height="75" src="img/pagetop.jpg" border="0"></td>
-</tr>
+                    document[imgName].src = imgOn;
+                }
+            }
 
-<tr>
-	<td valign="top" align="left" width="60" rowspan="3"><img 
-	width="60" height="275" src="img/page5_extleft.jpg" border="0" usemap="#left"></td>
-	<td valign="top" align="left" width="210" rowspan="3"><img 
-	width="210" height="275" src="img/page5_exta.jpg" border="0"></td>
-	<td valign="top" align="left" width="210"><img 
-	width="210" height="55" src="img/page5_extb.jpg" border="0"></td>
-  	<td valign="top" align="left" width="60" rowspan="3"><img width="60" height="275" src="img/pageright.jpg"
-  	border="0"></td>
-</tr>
+            function img_inact(imgName) {
+                if (version == 'n3') {
+                    imgOff = eval(imgName + 'off.src');
 
-<tr>
-	<td valign="top" align="left" width="210"><a href="maglev.html" 
-	onmouseover = "img_act('page5_extc_');HoverText('enter the descriptive window')" onmouseout="HoverText('none');img_inact('page5_extc_')"><img width="210" height="125" 
-	src="img/page5_extc_off.jpg" name="page5_extc_" border="0"></a></td>
-</tr>
+                    document[imgName].src = imgOff;
+                }
+            }
+        </script>
+    </head>
+    <body bgcolor="#000000">
+        <div align="center">
+            <table border="0" width="540" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td valign="bottom" align="left" width="540" colspan="4"><img width="540" height="75" src="img/pagetop.jpg" border="0"></td>
+                </tr>
+                <tr>
+                    <td valign="top" align="left" width="60" rowspan="3"><img
+                        width="60" height="275" src="img/page5_extleft.jpg" border="0" usemap="#left"></td>
+                    <td valign="top" align="left" width="210" rowspan="3"><img width="210" height="275" src="img/page5_exta.jpg" border="0"></td>
+                    <td valign="top" align="left" width="210"><img width="210" height="55" src="img/page5_extb.jpg" border="0"></td>
+                    <td valign="top" align="left" width="60" rowspan="3"><img width="60" height="275" src="img/pageright.jpg" border="0"></td>
+                </tr>
+                <tr>
+                    <td valign="top" align="left" width="210"><a href="maglev.html"
+                        onmouseover="img_act('page5_extc_');HoverText('enter the descriptive window')"
+                        onmouseout="HoverText('none');img_inact('page5_extc_')"><img width="210" height="125"
+                        src="img/page5_extc_off.jpg" name="page5_extc_" border="0"></a></td>
+                </tr>
+                <tr>
+                    <td valign="top" align="left" width="210"><img width="210" height="95" src="img/page0_extd.jpg" border="0"></td>
+                </tr>
+                <tr>
+                    <td valign="top" align="left" width="540" colspan="4"><img
+                        width="540" height="20" src="img/pagebot_mark_l.jpg" border="0" usemap="#bookmark"></td>
+                </tr>
+            </table>
+        </div>
 
-<tr>
-	<td valign="top" align="left" width="210"><img 
-	width="210" height="95" src="img/page0_extd.jpg" border="0"></td>
-</tr>
+        <map name="bookmark">
+            <area shape=rect coords="210,3,250,17" href="page_guild.html" onMouseOver="HoverText('turn to bookmark')" onmouseout="HoverText('none')">
+        </map>
 
-<tr>
-	<td valign="top" align="left" width="540" colspan="4"><img 
-	width="540" height="20" src="img/pagebot_mark_l.jpg" border="0" usemap="#bookmark"></td>
-</tr>
+        <map name="left">
+            <area shape=rect coords="0,0,54,15" href="index.html" onmouseover="HoverText('close the journal')" onmouseout="HoverText('none')">
+            <area shape=rect coords="0,16,50,50" href="index.html" onmouseover="HoverText('close the journal')" onmouseout="HoverText('none')">
+            <area shape=rect coords="0,51,45,80" href="index.html" onmouseover="HoverText('close the journal')" onmouseout="HoverText('none')">
+            <area shape=rect coords="0,81,38,130" href="index.html" onmouseover="HoverText('close the journal')" onmouseout="HoverText('none')">
+            <area shape=rect coords="0,131,33,170" href="index.html" onmouseover="HoverText('close the journal')" onmouseout="HoverText('none')">
+            <area shape=rect coords="0,171,26,205" href="index.html" onmouseover="HoverText('close the journal')" onmouseout="HoverText('none')">
+            <area shape=rect coords="0,206,20,275" href="index.html" onmouseover="HoverText('close the journal')" onmouseout="HoverText('none')">
+            <area shape=rect coords="0,0,60,275" href="page4_ext.html" onmouseover="HoverText('previous page')" onmouseout="HoverText('none')">
+        </map>
 
-</table>
-				
-</div>
+        <div style="clear:both;text-align:center;display:table;margin:50px auto 5px;padding:2px 10px 4px;background:clear;background:radial-gradient(ellipse at center, rgba(50,50,50,0.5) 0%, rgba(50,50,50,0.2) 100%);border:1px solid #555;border-radius:5px;color:#999;font-size:18px">Window text:
+            <span id="WindowStatus">none</span>
+        </div>
 
-<MAP NAME="bookmark">
-<AREA SHAPE=rect COORDS="210,3,250,17" HREF="page_guild.html" onMouseOver="HoverText('turn to bookmark')" onmouseout="HoverText('none')">
-</MAP>
+        <script type="text/javascript">
+            function HoverText(description) {
+                document.getElementById('WindowStatus').innerHTML = description;
+            }
+        </script>
 
-<MAP NAME="left">
-<AREA SHAPE=rect COORDS="0,0,54,15" href="index.html" onmouseover="HoverText('close the journal')" onmouseout="HoverText('none')">
-<AREA SHAPE=rect COORDS="0,16,50,50" href="index.html" onmouseover="HoverText('close the journal')" onmouseout="HoverText('none')">
-<AREA SHAPE=rect COORDS="0,51,45,80" href="index.html" onmouseover="HoverText('close the journal')" onmouseout="HoverText('none')">
-<AREA SHAPE=rect COORDS="0,81,38,130" href="index.html" onmouseover="HoverText('close the journal')" onmouseout="HoverText('none')">
-<AREA SHAPE=rect COORDS="0,131,33,170" href="index.html" onmouseover="HoverText('close the journal')" onmouseout="HoverText('none')">
-<AREA SHAPE=rect COORDS="0,171,26,205" href="index.html" onmouseover="HoverText('close the journal')" onmouseout="HoverText('none')">
-<AREA SHAPE=rect COORDS="0,206,20,275" href="index.html" onmouseover="HoverText('close the journal')" onmouseout="HoverText('none')">
-<AREA SHAPE=rect COORDS="0,0,60,275" href="page4_ext.html" onmouseover="HoverText('previous page')" onmouseout="HoverText('none')">
-</MAP>
-
-<div style="clear:both;text-align:center;display:table;margin:50px auto 5px;padding:2px 10px 4px;background:clear;background:radial-gradient(ellipse at center, rgba(50,50,50,0.5) 0%, rgba(50,50,50,0.2) 100%);border:1px solid #555;border-radius:5px;color:#999;font-size:18px">Window text:
-<span id="WindowStatus">none</span>
-</div>
-
-
-<script type="text/javascript">
-    function HoverText(description) {
-        document.getElementById('WindowStatus').innerHTML = description;
-    }
-</script>
-
-<script type="text/javascript">(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-111383-1',{'siteSpeedSampleRate':100});ga('require','displayfeatures');ga('send','pageview');</script>
-
-
-
-</body>
-
+        <script type="text/javascript">(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-111383-1',{'siteSpeedSampleRate':100});ga('require','displayfeatures');ga('send','pageview');</script>
+    </body>
 </html>
-
