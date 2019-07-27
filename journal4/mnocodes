@@ -1,16 +1,16 @@
-# Region chord file for MinnieMap 
+# Region chord file for MinnieMap
 # Paul Walmsley <ccshag@cclabs.missouri.edu> Wed Jul 16 02:24:29 CDT 1997
 # 1.0pre
 #
 # There should be no blank lines in this file that are not preceded by a #.
-# Each non-comment line should have three colon-delimited fields: 
+# Each non-comment line should have three colon-delimited fields:
 #   - a numerical region number, or S
 #   - a comma-separated list of region numbers
 #   - another comma-separated list of region numbers
 #
 # This was prepared from jpl's spec of Mon Jul 14 11:19:45 PDT 1997.  Rather
-# than using "A1", "D3", etc, the regions are numbered sequentially from 
-# left to right and from top to bottom, starting with zero.  eg "A1" = 0, 
+# than using "A1", "D3", etc, the regions are numbered sequentially from
+# left to right and from top to bottom, starting with zero.  eg "A1" = 0,
 # "D3" = 17.
 #
 #
@@ -21,13 +21,13 @@
 # There can be only one submit button region.
 S: 22,28,15,6,9: 12
 #
-# Numerical-prefix lines define behaviors for regions.  A gloss for a line 
-# such as 
+# Numerical-prefix lines define behaviors for regions.  A gloss for a line
+# such as
 #   0: 0,1,2: 10,12
 # is:
 #   "When region 0 is clicked, activate regions 0, 1, and 2, and deactivate
 #    regions 10 and 12."
-# 
+#
 # A group:
 0: 0,8,13,16: 4,18
 1: 1,7,16,20: 2,18,19
@@ -38,7 +38,7 @@ S: 22,28,15,6,9: 12
 # B group:
 5: 2,5: 7,11,27
 6: 6,16: 4,29
-7: 1,7,13,16,18: 
+7: 1,7,13,16,18:
 8: 4,8,10,19,26: 22,27
 9: 9: 0,3,16
 #
