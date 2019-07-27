@@ -1,117 +1,84 @@
 <html>
-<head>
- 
-<title>The Riven Journals, Journal Five</title>
-<base target="_top">
-</head>
-  
-<frameset rows="100%,*" border="no" frameborder="no" border="0">
- 
-<frame src="lock.html" name="_main">
+    <head>
+        <title>The Riven Journals, Journal Five</title>
 
-<frame src="../sound.html" scrolling=no name="_sound">
-     
-<noframes>
+        <base target="_top">
+    </head>
+    <frameset rows="100%,*" border="no" frameborder="no" border="0">
+        <frame src="lock.html" name="_main">
+        <frame src="../sound.html" scrolling=no name="_sound">
+        <noframes>
+            <body bgcolor="#000000" text="#ffffff">
+                <pre>
+                </pre>
 
+                <div align="center">
+                    <table border="0" width="540" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td align="left" valign="top" width="540" colspan="3"><img
+                                src="img/lock_top.jpg" border="0" height="47" width="540" usemap="#top"></td>
+                        </tr>
+                        <tr>
+                            <td align="left" valign="top" width="204"><img
+                                src="img/lock_left.jpg" border="0" height="133" width="204" usemap="#left"></td>
+                            <td align="left" valign="top" width="171">
+                                <!--
+                                    <a href="../post_initial/index.html" target="_top"><img
+                                        src="img/lock_temp.jpg" border="0" height="133" width="171">
+                                -->
+                                <applet code="Grid.class" width=171 height=133>
+                                    get java
+                                </applet>
+                            </td>
+                            <td align="left" valign="top" width="165"><img
+                                src="img/lock_right.jpg" border="0" height="133" width="165" usemap="#right"></td>
+                        </tr>
+                        <tr>
+                            <td align="left" valign="top" width="540" colspan="3"><img
+                                src="img/lock_bot.jpg" border="0" height="199" width="540" usemap="#bot"></td>
+                        </tr>
+                    </table>
+                </div>
 
-<html>
+                <map name="top">
+                    <area shape=rect coords="0,0,59,47" href="../../table5.html" onmouseover="HoverText('return the journal')" onmouseout="HoverText('none')">
+                    <area shape=rect coords="60,0,165,47" href="spine_l.html" onmouseover="HoverText('examine the spine')" onmouseout="HoverText('none')">
+                    <area shape=rect coords="374,0,455,47" href="side_l.html" onmouseover="HoverText('examine the side')" onmouseout="HoverText('none')">
+                    <area shape=rect coords="456,0,540,47" href="../../table5.html" onmouseover="HoverText('return the journal')" onmouseout="HoverText('none')">
+                </map>
 
-<head>
-<title>The Riven Journals, Journal Five</title>
+                <map name="left">
+                    <area shape=rect coords="0,0,59,133" href="../../table5.html" onmouseover="HoverText('return the journal')" onmouseout="HoverText('none')">
+                    <area shape=rect coords="60,0,165,100" href="spine_l.html" onmouseover="HoverText('examine the spine')" onmouseout="HoverText('none')">
+                    <area shape=rect coords="60,112,165,133" href="spine_l.html" onmouseover="HoverText('examine the spine')" onmouseout="HoverText('none')">
+                </map>
 
-</head><body bgcolor="#000000" text="#ffffff">
+                <map name="right">
+                    <area shape=rect coords="0,0,79,133" href="side_l.html" onmouseover="HoverText('examine the side')" onmouseout="HoverText('none')">
+                    <area shape=rect coords="80,0,165,133" href="../../table5.html" onmouseover="HoverText('return the journal')" onmouseout="HoverText('none')">
+                </map>
 
-<pre>
-</pre>
+                <map name="bot">
+                    <area shape=rect coords="0,0,59,199" href="../../table5.html" onmouseover="HoverText('return the journal')" onmouseout="HoverText('none')">
+                    <area shape=rect coords="60,0,165,22" href="spine_l.html" onmouseover="HoverText('examine the spine')" onmouseout="HoverText('none')">
+                    <area shape=rect coords="60,35,165,65" href="spine_l.html" onmouseover="HoverText('examine the spine')" onmouseout="HoverText('none')">
+                    <area shape=rect coords="60,36,165,199" href="spine_l.html" onmouseover="HoverText('examine the spine')" onmouseout="HoverText('none')">
+                    <area shape=rect coords="374,0,455,199" href="side_l.html" onmouseover="HoverText('examine the side')" onmouseout="HoverText('none')">
+                    <area shape=rect coords="456,0,540,199" href="../../table5.html" onmouseover="HoverText('return the journal')" onmouseout="HoverText('none')">
+                </map>
 
-<div align="center">
+                <div style="clear:both;text-align:center;display:table;margin:50px auto 5px;padding:2px 10px 4px;background:clear;background:radial-gradient(ellipse at center, rgba(50,50,50,0.5) 0%, rgba(50,50,50,0.2) 100%);border:1px solid #555;border-radius:5px;color:#999;font-size:18px">Window text:
+                    <span id="WindowStatus">none</span>
+                </div>
 
-<table border="0" width="540" cellpadding="0" cellspacing="0">
+                <script type="text/javascript">
+                    function HoverText(description) {
+                        document.getElementById('WindowStatus').innerHTML = description;
+                    }
+                </script>
 
-<tr>
-	
-	<td align="left" valign="top" width="540" colspan="3"><img 
-	src="img/lock_top.jpg" border="0" height="47" width="540" usemap="#top"></td>
-	
-</tr>
-
-<tr>
-
-	<td align="left" valign="top" width="204"><img 
-	src="img/lock_left.jpg" border="0" height="133" width="204" usemap="#left"></td>
-	
-	<td align="left" valign="top" width="171"><!--<a href="../post_initial/index.html" target="_top"><img 
-	src="img/lock_temp.jpg" border="0" height="133" width="171">--><applet code="Grid.class" width=171 height=133>
-  get java
-</applet></td>
-	
-	<td align="left" valign="top" width="165"><img 
-	src="img/lock_right.jpg" border="0" height="133" width="165" usemap="#right"></td>
-	
-</tr>
-
-<tr>
-
-	<td align="left" valign="top" width="540" colspan="3"><img 
-	src="img/lock_bot.jpg" border="0" height="199" width="540" usemap="#bot"></td>
-	
-</tr>
-
-</table>
-
-</div>
-
-<map name="top">
-<area shape=rect coords="0,0,59,47" href="../../table5.html" onmouseover="HoverText('return the journal')" onmouseout="HoverText('none')">
-<area shape=rect coords="60,0,165,47" href="spine_l.html" onmouseover="HoverText('examine the spine')" onmouseout="HoverText('none')">
-<area shape=rect coords="374,0,455,47" href="side_l.html" onmouseover="HoverText('examine the side')" onmouseout="HoverText('none')">
-<area shape=rect coords="456,0,540,47" href="../../table5.html" onmouseover="HoverText('return the journal')" onmouseout="HoverText('none')">
-</map>
-
-<map name="left">
-<area shape=rect coords="0,0,59,133" href="../../table5.html" onmouseover="HoverText('return the journal')" onmouseout="HoverText('none')">
-<area shape=rect coords="60,0,165,100" href="spine_l.html" onmouseover="HoverText('examine the spine')" onmouseout="HoverText('none')">
-<area shape=rect coords="60,112,165,133" href="spine_l.html" onmouseover="HoverText('examine the spine')" onmouseout="HoverText('none')">
-</map>
-
-<map name="right">
-<area shape=rect coords="0,0,79,133" href="side_l.html" onmouseover="HoverText('examine the side')" onmouseout="HoverText('none')">
-<area shape=rect coords="80,0,165,133" href="../../table5.html" onmouseover="HoverText('return the journal')" onmouseout="HoverText('none')">
-</map>
-
-<map name="bot">
-<area shape=rect coords="0,0,59,199" href="../../table5.html" onmouseover="HoverText('return the journal')" onmouseout="HoverText('none')">
-<area shape=rect coords="60,0,165,22" href="spine_l.html" onmouseover="HoverText('examine the spine')" onmouseout="HoverText('none')">
-<area shape=rect coords="60,35,165,65" href="spine_l.html" onmouseover="HoverText('examine the spine')" onmouseout="HoverText('none')">
-<area shape=rect coords="60,36,165,199" href="spine_l.html" onmouseover="HoverText('examine the spine')" onmouseout="HoverText('none')">
-<area shape=rect coords="374,0,455,199" href="side_l.html" onmouseover="HoverText('examine the side')" onmouseout="HoverText('none')">
-<area shape=rect coords="456,0,540,199" href="../../table5.html" onmouseover="HoverText('return the journal')" onmouseout="HoverText('none')">
-</map>
-
-<div style="clear:both;text-align:center;display:table;margin:50px auto 5px;padding:2px 10px 4px;background:clear;background:radial-gradient(ellipse at center, rgba(50,50,50,0.5) 0%, rgba(50,50,50,0.2) 100%);border:1px solid #555;border-radius:5px;color:#999;font-size:18px">Window text:
-<span id="WindowStatus">none</span>
-</div>
-
-
-<script type="text/javascript">
-    function HoverText(description) {
-        document.getElementById('WindowStatus').innerHTML = description;
-    }
-</script>
-
-<script type="text/javascript">(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-111383-1',{'siteSpeedSampleRate':100});ga('require','displayfeatures');ga('send','pageview');</script>
-
-
-
-
-
-
-
-</body></html>
-
-
-</noframes>
-     
-</frameset>
-
+                <script type="text/javascript">(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-111383-1',{'siteSpeedSampleRate':100});ga('require','displayfeatures');ga('send','pageview');</script>
+            </body>
+        </noframes>
+    </frameset>
 </html>
