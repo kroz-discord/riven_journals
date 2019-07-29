@@ -13,21 +13,20 @@
                 </tr>
                 <tr>
                     <td valign="top" align="center" width="380">
-                        <applet codebase="/journal2/java/" code="applet.game.puzzle.SelectMate.class" width=380 height=220>
-                            <param name="TOP_DIR"          value="java/">
-                            <param name="WATCH_IMG"        value="images/watch.gif">
-                            <param name="BACKGROUND_IMG"   value="p2-img/p2-back.jpg">
-                            <param name="SUBMIT_IMG"       value="p2-img/p2-submit.jpg">
-                            <param name="BACKGROUND_COLOR" value="8e8e8e">
-                            <param name="FOREGROUND_COLOR" value="4a4a4a">
-                            <param name="LEFT_RECT"        value="+0+0x110x60">
-                            <param name="RIGHT_RECT"       value="+270+0x110x60">
-                            <param name="MIX_RECT"         value="+137+160x110x60">
-                            <param name="SUBMIT_RECT"      value="+106+90x170x35">
-                            <param name="THUMB_RECT"       value="+337+94x37x122">
-                            <param name="DEBUG"            value="false">
-                            java required
-                        </applet>
+                        <div id="selectMate" style="width: 380px; height: 220px; position: relative; background: url('java/p2-img/p2-back.jpg');">
+                            <img id="leftParent" style="position: absolute; top: 0px; left: 0px; width: 110px; height: 60px;" />
+                            <img id="rightParent" style="position: absolute; top: 0px; left: 270px; width: 110px; height: 60px;" />
+                            <img id="nextGeneration" style="position: absolute; top: 160px; left: 137px; width: 110px; height: 60px;" />
+                            <div id="breedButton" style="position: absolute; top: 90px; left: 106px; width: 170px; height: 35px;">
+                                <img id="breedButtonImage" src='java/p2-img/p2-submit.jpg'
+                                    style="position: absolute; top: 0px; left: 0px; width: 170px; height: 35px; visibility: hidden;" />
+                            </div>
+                            <img id="thumbnail0" style="position: absolute; top: 94px; left: 337px; width: 35px; height: 15px;" />
+                            <img id="thumbnail1" style="position: absolute; top: 120px; left: 337px; width: 35px; height: 15px;" />
+                            <img id="thumbnail2" style="position: absolute; top: 146px; left: 337px; width: 35px; height: 15px;" />
+                            <img id="thumbnail3" style="position: absolute; top: 172px; left: 337px; width: 35px; height: 15px;" />
+                            <img id="thumbnail4" style="position: absolute; top: 198px; left: 337px; width: 35px; height: 15px;" />
+                        </div>
                     </td>
                 </tr>
                 <tr>
@@ -55,6 +54,559 @@
             </script>
 
             <script type="text/javascript">(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-111383-1',{'siteSpeedSampleRate':100});ga('require','displayfeatures');ga('send','pageview');</script>
+
+            <script type="text/javascript">
+                var finalClip = new Audio('java/sounds/final4.wav');
+                var breedClips = [
+                    new Audio('java/sounds/live.wav'),
+                    new Audio('java/sounds/livehalf.wav'),
+                    new Audio('java/sounds/livenone.wav'),
+                    new Audio('java/sounds/deadhalf.wav'),
+                    new Audio('java/sounds/dead.wav')
+                ];
+
+                var done = false;
+                var currentGeneration = 0;
+                var currentMatePattern = null;
+                var selectedHistory = [];
+                var leftSelection = 0;
+                var rightSelection = 0;
+                var leftParent = document.getElementById('leftParent');
+                var rightParent = document.getElementById('rightParent');
+                var nextGeneration = document.getElementById('nextGeneration');
+                var breedButton = document.getElementById('breedButton');
+                var breedButtonImage = document.getElementById('breedButtonImage');
+                var thumbnail0 = document.getElementById('thumbnail0');
+                var thumbnail1 = document.getElementById('thumbnail1');
+                var thumbnail2 = document.getElementById('thumbnail2');
+                var thumbnail3 = document.getElementById('thumbnail3');
+                var thumbnail4 = document.getElementById('thumbnail4');
+                var thumbnails = [thumbnail0, thumbnail1, thumbnail2, thumbnail3, thumbnail4];
+                var generationData = loadGenerationData();
+
+                // horizontally slice an image into component frames
+                function sliceImageHorizontally(img, arr, wid, ht, bottom) {
+                    for (var index = 0; index < (img.width / wid); index++) {
+                        var canvas = document.createElement('canvas');
+                        canvas.width = wid;
+                        canvas.height = img.height;
+
+                        var context = canvas.getContext('2d');
+                        context.drawImage(img, index * wid, bottom, wid, ht, 0, 0, canvas.width, canvas.height);
+
+                        arr.push(canvas.toDataURL());
+                    }
+                }
+
+                // tiles with images of various generations
+                var generationFrames = [[], [], [], [], []];
+
+                var generation0Image = new Image();
+                generation0Image.onload = cutUpGeneration0;
+                generation0Image.src = 'java/p2-img/p2-0gen.jpg';
+
+                function cutUpGeneration0() {
+                    sliceImageHorizontally(generation0Image, generationFrames[0], 110, generation0Image.height, 0);
+
+                    leftParent.src = generationFrames[0][0];
+                    rightParent.src = generationFrames[0][0];
+                }
+
+                var generation1Image = new Image();
+                generation1Image.onload = cutUpGeneration1;
+                generation1Image.src = 'java/p2-img/p2-1gen.jpg';
+
+                function cutUpGeneration1() {
+                    sliceImageHorizontally(generation1Image, generationFrames[1], 110, generation1Image.height, 0);
+                }
+
+                var generation2Image = new Image();
+                generation2Image.onload = cutUpGeneration2;
+                generation2Image.src = 'java/p2-img/p2-2gen.jpg';
+
+                function cutUpGeneration2() {
+                    sliceImageHorizontally(generation2Image, generationFrames[2], 110, generation2Image.height, 0);
+                }
+
+                var generation3Image = new Image();
+                generation3Image.onload = cutUpGeneration3;
+                generation3Image.src = 'java/p2-img/p2-3gen.jpg';
+
+                function cutUpGeneration3() {
+                    sliceImageHorizontally(generation3Image, generationFrames[3], 110, generation3Image.height, 0);
+                }
+
+                var generation4Image = new Image();
+                generation4Image.onload = cutUpGeneration4;
+                generation4Image.src = 'java/p2-img/p2-4gen.jpg';
+
+                function cutUpGeneration4() {
+                    sliceImageHorizontally(generation4Image, generationFrames[4], 110, generation4Image.height, 0);
+                }
+
+                // tiles with final animation
+                var finalFrames = [];
+
+                var finalImage = new Image();
+                finalImage.onload = cutUpFinal;
+                finalImage.src = 'java/p2-img/p2-5gen.jpg';
+
+                function cutUpFinal() {
+                    sliceImageHorizontally(finalImage, finalFrames, 110, finalImage.height, 0);
+                }
+
+                // tiles with images of thumbnails
+                var thumbnailFrames = [[], [], [], [], []];
+
+                var thumbnail0Image = new Image();
+                thumbnail0Image.onload = cutUpThumbnail0;
+                thumbnail0Image.src = 'java/p2-img/p2-1thumb.jpg';
+
+                function cutUpThumbnail0() {
+                    sliceImageHorizontally(thumbnail0Image, thumbnailFrames[0], 35, thumbnail0Image.height, 0);
+                }
+
+                var thumbnail1Image = new Image();
+                thumbnail1Image.onload = cutUpThumbnail1;
+                thumbnail1Image.src = 'java/p2-img/p2-2thumb.jpg';
+
+                function cutUpThumbnail1() {
+                    sliceImageHorizontally(thumbnail1Image, thumbnailFrames[1], 35, thumbnail1Image.height, 0);
+                }
+
+                var thumbnail2Image = new Image();
+                thumbnail2Image.onload = cutUpThumbnail2;
+                thumbnail2Image.src = 'java/p2-img/p2-3thumb.jpg';
+
+                function cutUpThumbnail2() {
+                    sliceImageHorizontally(thumbnail2Image, thumbnailFrames[2], 35, thumbnail2Image.height, 0);
+                }
+
+                var thumbnail3Image = new Image();
+                thumbnail3Image.onload = cutUpThumbnail3;
+                thumbnail3Image.src = 'java/p2-img/p2-4thumb.jpg';
+
+                function cutUpThumbnail3() {
+                    sliceImageHorizontally(thumbnail3Image, thumbnailFrames[3], 35, thumbnail3Image.height, 0);
+                }
+
+                var thumbnail4Image = new Image();
+                thumbnail4Image.onload = cutUpThumbnail4;
+                thumbnail4Image.src = 'java/p2-img/p2-5thumb.jpg';
+
+                function cutUpThumbnail4() {
+                    sliceImageHorizontally(thumbnail4Image, thumbnailFrames[4], 35, thumbnail4Image.height, 0);
+                }
+
+                // tiles with images of dead generations
+                var deadFrames = [];
+
+                var deadImage = new Image();
+                deadImage.onload = cutUpDeadImage;
+                deadImage.src = 'java/p2-img/p2-dead.jpg';
+
+                function cutUpDeadImage() {
+                    sliceImageHorizontally(deadImage, deadFrames, 110, deadImage.height, 0);
+                }
+
+                // mouse events
+                leftParent.addEventListener('mousedown', e => {
+                    if (currentGeneration == 0) {
+                        leftSelection = (leftSelection + 1) % generationFrames[currentGeneration].length;
+
+                        leftParent.src = generationFrames[currentGeneration][leftSelection];
+                    }
+                });
+
+                var rightParentCycle = function() {
+                    rightSelection = (rightSelection + 1) % generationFrames[currentGeneration].length;
+
+                    rightParent.src = generationFrames[currentGeneration][rightSelection];
+                }
+
+                rightParent.addEventListener('mousedown', rightParentCycle);
+
+                nextGeneration.addEventListener('mousedown', e => {
+                    if (done) {
+                        window.open('cookie.cgi');
+
+                        return;
+                    }
+
+                    if ((currentMatePattern != null) && currentMatePattern.living) {
+                        selectedHistory[currentGeneration] = currentMatePattern;
+                        leftSelection = currentMatePattern.child;
+                        rightSelection = 0;
+                        currentMatePattern = null;
+                        currentGeneration++;
+
+                        leftParent.src = generationFrames[currentGeneration][leftSelection];
+                        rightParent.src = generationFrames[currentGeneration][rightSelection];
+
+                        for (var i = 0; i < thumbnails.length; i++) {
+                            var thumb = thumbnails[i];
+
+                            if (selectedHistory[i] == null) {
+                                break;
+                            }
+
+                            thumb.src = thumbnailFrames[i][selectedHistory[i].child];
+                        }
+                    }
+                });
+
+                var clickThumbnail0 = function() {
+                    clickThumbnail(0);
+                }
+
+                var clickThumbnail1 = function() {
+                    clickThumbnail(1);
+                }
+
+                var clickThumbnail2 = function() {
+                    clickThumbnail(2);
+                }
+
+                var clickThumbnail3 = function() {
+                    clickThumbnail(3);
+                }
+
+                var clickThumbnail4 = function() {
+                    clickThumbnail(4);
+                }
+
+                thumbnail0.addEventListener('mousedown', clickThumbnail0);
+                thumbnail1.addEventListener('mousedown', clickThumbnail1);
+                thumbnail2.addEventListener('mousedown', clickThumbnail2);
+                thumbnail3.addEventListener('mousedown', clickThumbnail3);
+                thumbnail4.addEventListener('mousedown', clickThumbnail4);
+
+                breedButton.addEventListener('mouseover', e => {
+                    breedButtonImage.style.visibility = 'visible';
+                });
+
+                var mouseOutEvent = function() {
+                    breedButtonImage.style.visibility = 'hidden';
+                }
+
+                breedButton.addEventListener('mouseout', mouseOutEvent);
+
+                breedButton.addEventListener('mousedown', e => {
+                    if (done) {
+                        window.open('cookie.cgi');
+
+                        return;
+                    }
+
+                    var matePattern = getMatePattern();
+                    breedClips[matePattern.sound].play();
+
+                    currentMatePattern = matePattern;
+
+                    if (matePattern.living) {
+                        if (currentGeneration == 4) {
+                            selectedHistory[currentGeneration] = matePattern;
+                            solved = true;
+
+                            setTimeout(function() {
+                                // keep text highlighted permanently
+                                breedButton.removeEventListener('mouseout', mouseOutEvent);
+                                breedButtonImage.style.visibility = 'visible';
+
+                                // remove event handlers
+                                rightParent.removeEventListener('mousedown', rightParentCycle);
+                                thumbnail0.removeEventListener('mousedown', clickThumbnail0);
+                                thumbnail1.removeEventListener('mousedown', clickThumbnail1);
+                                thumbnail2.removeEventListener('mousedown', clickThumbnail2);
+                                thumbnail3.removeEventListener('mousedown', clickThumbnail3);
+                                thumbnail4.removeEventListener('mousedown', clickThumbnail4);
+
+                                // play audio
+                                finalClip.play();
+
+                                // show final animation
+                                var finalFrame = 0;
+
+                                var finalAnimation = setInterval(function() {
+                                    if (finalFrame < finalFrames.length) {
+                                        nextGeneration.src = finalFrames[finalFrame++];
+                                    } else {
+                                        clearInterval(finalAnimation);
+
+                                        done = true;
+                                    }
+                                }, 400);
+                            }, 750);
+
+                            return;
+                        }
+
+                        nextGeneration.src = generationFrames[currentGeneration + 1][matePattern.child];
+                    } else {
+                        nextGeneration.src = deadFrames[matePattern.child];
+                    }
+                });
+
+                function clickThumbnail(i) {
+                    var matePattern = selectedHistory[i];
+
+                    if (matePattern == null) {
+                        return;
+                    }
+
+                    currentGeneration = i;
+                    currentMatePattern = matePattern;
+                    leftSelection = matePattern.parent1;
+                    rightSelection = matePattern.parent2;
+
+                    leftParent.src = generationFrames[currentGeneration][leftSelection];
+                    rightParent.src = generationFrames[currentGeneration][rightSelection];
+
+                    for (var k = i; k < thumbnails.length; k++) {
+                        selectedHistory[k] = null;
+                        thumbnails[k].src = '';
+                    }
+
+                    if (currentGeneration < 4) {
+                        nextGeneration.src = generationFrames[currentGeneration + 1][matePattern.child];
+                    }
+                }
+
+                // other functions
+                function getMatePattern() {
+                    var array = generationData[currentGeneration];
+
+                    for (var i = 0; i < array.length; i++) {
+                        var item = array[i];
+
+                        if (((item.parent1 == leftSelection) && (item.parent2 == rightSelection)) ||
+                                ((item.parent1 == rightSelection) && (item.parent2 == leftSelection))) {
+                            return item;
+                        }
+                    }
+                }
+
+                // load the generation data
+                function loadGenerationData() {
+                    // TODO: Extract to its own json file?
+                    return [
+                        // generation zero
+                        [
+                            { 'parent1': 0, 'parent2': 0, 'child': 0, 'living': true, 'sound': 2 },
+                            { 'parent1': 0, 'parent2': 1, 'child': 1, 'living': false, 'sound': 3 },
+                            { 'parent1': 0, 'parent2': 2, 'child': 1, 'living': true, 'sound': 2 },
+                            { 'parent1': 0, 'parent2': 3, 'child': 2, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 4, 'child': 0, 'living': false, 'sound': 3 },
+                            { 'parent1': 1, 'parent2': 1, 'child': 2, 'living': true, 'sound': 1 },
+                            { 'parent1': 1, 'parent2': 2, 'child': 2, 'living': false, 'sound': 3 },
+                            { 'parent1': 1, 'parent2': 3, 'child': 3, 'living': true, 'sound': 1 },
+                            { 'parent1': 1, 'parent2': 4, 'child': 4, 'living': true, 'sound': 0 },
+                            { 'parent1': 2, 'parent2': 2, 'child': 5, 'living': true, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 3, 'child': 3, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 4, 'child': 3, 'living': false, 'sound': 3 },
+                            { 'parent1': 3, 'parent2': 3, 'child': 6, 'living': true, 'sound': 2 },
+                            { 'parent1': 3, 'parent2': 4, 'child': 7, 'living': true, 'sound': 1 },
+                            { 'parent1': 4, 'parent2': 4, 'child': 2, 'living': false, 'sound': 3 }
+                        ],
+
+                        // generation one
+                        [
+                            { 'parent1': 0, 'parent2': 0, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 1, 'child': 5, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 2, 'child': 4, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 3, 'child': 6, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 4, 'child': 0, 'living': true, 'sound': 1 },
+                            { 'parent1': 0, 'parent2': 5, 'child': 4, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 6, 'child': 6, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 7, 'child': 5, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 8, 'child': 1, 'living': true, 'sound': 1 },
+                            { 'parent1': 1, 'parent2': 1, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 2, 'child': 4, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 3, 'child': 6, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 4, 'child': 5, 'living': false, 'sound': 3 },
+                            { 'parent1': 1, 'parent2': 5, 'child': 4, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 6, 'child': 7, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 7, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 8, 'child': 0, 'living': false, 'sound': 3 },
+                            { 'parent1': 2, 'parent2': 2, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 3, 'child': 5, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 4, 'child': 2, 'living': true, 'sound': 1 },
+                            { 'parent1': 2, 'parent2': 5, 'child': 6, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 6, 'child': 7, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 7, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 8, 'child': 4, 'living': false, 'sound': 3 },
+                            { 'parent1': 3, 'parent2': 3, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 3, 'parent2': 4, 'child': 3, 'living': true, 'sound': 1 },
+                            { 'parent1': 3, 'parent2': 5, 'child': 5, 'living': false, 'sound': 4 },
+                            { 'parent1': 3, 'parent2': 6, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 3, 'parent2': 7, 'child': 4, 'living': false, 'sound': 4 },
+                            { 'parent1': 3, 'parent2': 8, 'child': 5, 'living': false, 'sound': 3 },
+                            { 'parent1': 4, 'parent2': 4, 'child': 0, 'living': false, 'sound': 3 },
+                            { 'parent1': 4, 'parent2': 5, 'child': 4, 'living': true, 'sound': 1 },
+                            { 'parent1': 4, 'parent2': 6, 'child': 5, 'living': true, 'sound': 1 },
+                            { 'parent1': 4, 'parent2': 7, 'child': 6, 'living': true, 'sound': 1 },
+                            { 'parent1': 4, 'parent2': 8, 'child': 7, 'living': true, 'sound': 0 },
+                            { 'parent1': 5, 'parent2': 5, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 5, 'parent2': 6, 'child': 7, 'living': false, 'sound': 4 },
+                            { 'parent1': 5, 'parent2': 7, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 5, 'parent2': 8, 'child': 6, 'living': false, 'sound': 3 },
+                            { 'parent1': 6, 'parent2': 6, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 6, 'parent2': 7, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 6, 'parent2': 8, 'child': 4, 'living': false, 'sound': 3 },
+                            { 'parent1': 7, 'parent2': 7, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 7, 'parent2': 8, 'child': 0, 'living': false, 'sound': 3 },
+                            { 'parent1': 8, 'parent2': 8, 'child': 0, 'living': false, 'sound': 4 }
+                        ],
+
+                        // generation two
+                        [
+                            { 'parent1': 0, 'parent2': 0, 'child': 0, 'living': false, 'sound': 3 },
+                            { 'parent1': 0, 'parent2': 1, 'child': 8, 'living': false, 'sound': 3 },
+                            { 'parent1': 0, 'parent2': 2, 'child': 0, 'living': true, 'sound': 1 },
+                            { 'parent1': 0, 'parent2': 3, 'child': 1, 'living': true, 'sound': 1 },
+                            { 'parent1': 0, 'parent2': 4, 'child': 9, 'living': false, 'sound': 3 },
+                            { 'parent1': 0, 'parent2': 5, 'child': 2, 'living': true, 'sound': 1 },
+                            { 'parent1': 0, 'parent2': 6, 'child': 10, 'living': false, 'sound': 3 },
+                            { 'parent1': 0, 'parent2': 7, 'child': 10, 'living': false, 'sound': 3 },
+                            { 'parent1': 0, 'parent2': 8, 'child': 8, 'living': false, 'sound': 3 },
+                            { 'parent1': 1, 'parent2': 1, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 2, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 3, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 4, 'child': 8, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 5, 'child': 4, 'living': true, 'sound': 2 },
+                            { 'parent1': 1, 'parent2': 6, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 7, 'child': 0, 'living': false, 'sound': 3 },
+                            { 'parent1': 1, 'parent2': 8, 'child': 9, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 2, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 3, 'child': 8, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 4, 'child': 9, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 5, 'child': 10, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 6, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 7, 'child': 9, 'living': false, 'sound': 3 },
+                            { 'parent1': 2, 'parent2': 8, 'child': 10, 'living': false, 'sound': 4 },
+                            { 'parent1': 3, 'parent2': 3, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 3, 'parent2': 4, 'child': 9, 'living': false, 'sound': 4 },
+                            { 'parent1': 3, 'parent2': 5, 'child': 10, 'living': false, 'sound': 4 },
+                            { 'parent1': 3, 'parent2': 6, 'child': 8, 'living': false, 'sound': 4 },
+                            { 'parent1': 3, 'parent2': 7, 'child': 5, 'living': true, 'sound': 1 },
+                            { 'parent1': 3, 'parent2': 8, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 4, 'parent2': 4, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 4, 'parent2': 5, 'child': 8, 'living': false, 'sound': 4 },
+                            { 'parent1': 4, 'parent2': 6, 'child': 9, 'living': false, 'sound': 4 },
+                            { 'parent1': 4, 'parent2': 7, 'child': 6, 'living': true, 'sound': 1 },
+                            { 'parent1': 4, 'parent2': 8, 'child': 10, 'living': false, 'sound': 4 },
+                            { 'parent1': 5, 'parent2': 5, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 5, 'parent2': 6, 'child': 8, 'living': false, 'sound': 4 },
+                            { 'parent1': 5, 'parent2': 7, 'child': 7, 'living': true, 'sound': 1 },
+                            { 'parent1': 5, 'parent2': 8, 'child': 9, 'living': false, 'sound': 4 },
+                            { 'parent1': 6, 'parent2': 6, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 6, 'parent2': 7, 'child': 0, 'living': false, 'sound': 3 },
+                            { 'parent1': 6, 'parent2': 8, 'child': 9, 'living': false, 'sound': 4 },
+                            { 'parent1': 7, 'parent2': 7, 'child': 0, 'living': false, 'sound': 3 },
+                            { 'parent1': 7, 'parent2': 8, 'child': 3, 'living': true, 'sound': 0 },
+                            { 'parent1': 8, 'parent2': 8, 'child': 0, 'living': false, 'sound': 4 }
+                        ],
+
+                        // generation three
+                        [
+                            { 'parent1': 0, 'parent2': 0, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 1, 'child': 0, 'living': true, 'sound': 2 },
+                            { 'parent1': 0, 'parent2': 2, 'child': 11, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 3, 'child': 12, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 4, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 5, 'child': 1, 'living': true, 'sound': 2 },
+                            { 'parent1': 0, 'parent2': 6, 'child': 12, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 7, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 8, 'child': 11, 'living': false, 'sound': 3 },
+                            { 'parent1': 1, 'parent2': 1, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 2, 'child': 13, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 3, 'child': 2, 'living': true, 'sound': 2 },
+                            { 'parent1': 1, 'parent2': 4, 'child': 12, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 5, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 6, 'child': 13, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 7, 'child': 11, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 8, 'child': 0, 'living': false, 'sound': 3 },
+                            { 'parent1': 2, 'parent2': 2, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 3, 'child': 14, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 4, 'child': 11, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 5, 'child': 14, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 6, 'child': 14, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 7, 'child': 14, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 8, 'child': 3, 'living': true, 'sound': 2 },
+                            { 'parent1': 3, 'parent2': 3, 'child': 0, 'living': false, 'sound': 3 },
+                            { 'parent1': 3, 'parent2': 4, 'child': 0, 'living': false, 'sound': 3 },
+                            { 'parent1': 3, 'parent2': 5, 'child': 4, 'living': true, 'sound': 2 },
+                            { 'parent1': 3, 'parent2': 6, 'child': 5, 'living': true, 'sound': 2 },
+                            { 'parent1': 3, 'parent2': 7, 'child': 14, 'living': false, 'sound': 3 },
+                            { 'parent1': 3, 'parent2': 8, 'child': 6, 'living': true, 'sound': 0 },
+                            { 'parent1': 4, 'parent2': 4, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 4, 'parent2': 5, 'child': 7, 'living': true, 'sound': 2 },
+                            { 'parent1': 4, 'parent2': 6, 'child': 11, 'living': false, 'sound': 4 },
+                            { 'parent1': 4, 'parent2': 7, 'child': 12, 'living': false, 'sound': 4 },
+                            { 'parent1': 4, 'parent2': 8, 'child': 13, 'living': false, 'sound': 3 },
+                            { 'parent1': 5, 'parent2': 5, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 5, 'parent2': 6, 'child': 14, 'living': false, 'sound': 4 },
+                            { 'parent1': 5, 'parent2': 7, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 5, 'parent2': 8, 'child': 13, 'living': false, 'sound': 3 },
+                            { 'parent1': 6, 'parent2': 6, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 6, 'parent2': 7, 'child': 14, 'living': false, 'sound': 4 },
+                            { 'parent1': 6, 'parent2': 8, 'child': 14, 'living': false, 'sound': 3 },
+                            { 'parent1': 7, 'parent2': 7, 'child': 0, 'living': false, 'sound': 4 },
+                            { 'parent1': 7, 'parent2': 8, 'child': 8, 'living': true, 'sound': 2 },
+                            { 'parent1': 8, 'parent2': 8, 'child': 0, 'living': false, 'sound': 3 }
+                        ],
+
+                        // generation four
+                        [
+                            { 'parent1': 0, 'parent2': 0, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 1, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 2, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 3, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 4, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 5, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 6, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 7, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 0, 'parent2': 8, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 1, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 2, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 3, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 4, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 5, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 6, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 7, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 1, 'parent2': 8, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 2, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 3, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 4, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 5, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 6, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 7, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 2, 'parent2': 8, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 3, 'parent2': 3, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 3, 'parent2': 4, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 3, 'parent2': 5, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 3, 'parent2': 6, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 3, 'parent2': 7, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 3, 'parent2': 8, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 4, 'parent2': 4, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 4, 'parent2': 5, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 4, 'parent2': 6, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 4, 'parent2': 7, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 4, 'parent2': 8, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 5, 'parent2': 5, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 5, 'parent2': 6, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 5, 'parent2': 7, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 5, 'parent2': 8, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 6, 'parent2': 6, 'child': 0, 'living': true, 'sound': 0 },
+                            { 'parent1': 6, 'parent2': 7, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 6, 'parent2': 8, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 7, 'parent2': 7, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 7, 'parent2': 8, 'child': 15, 'living': false, 'sound': 4 },
+                            { 'parent1': 8, 'parent2': 8, 'child': 15, 'living': false, 'sound': 4 }
+                        ]
+                    ];
+                }
+            </script>
         </div>
     </body>
 </html>
