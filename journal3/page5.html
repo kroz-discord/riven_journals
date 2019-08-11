@@ -30,23 +30,29 @@
                 </tr>
                 <tr>
                     <td valign="top" align="left" width="380">
-                        <applet codebase="/journal3/java/" code="applet.game.puzzle.MagLev.class" width=380 height=270>
-                        <param name="WATCH_IMG"        value="p3-img/watch.gif">
-                        <param name="BACKGROUND_IMG"   value="p3-img/background.jpg">
-                        <param name="BUTTON_IMG"       value="p3-img/button.gif">
-                        <param name="THRUST_IMG"       value="p3-img/thrust.gif">
-                        <param name="THRUST_ON_IMG"    value="p3-img/thrust_on.gif">
-                        <param name="RAIL_IMG"         value="p3-img/nrail.gif">
-                        <param name="RAIL_ON_IMG"      value="p3-img/nrail_on.gif">
-                        <param name="BACKGROUND_COLOR" value="8e8e8e">
-                        <param name="FOREGROUND_COLOR" value="4a4a4a">
-                        <param name="THRUST_RECT"      value="+183+100x12x12">
-                        <param name="LEFTRAIL_RECT"    value="+59+196x12x12">
-                        <param name="RIGHTRAIL_RECT"   value="+309+196x12x12">
-                        <param name="SOLVED_RECT"      value="+162+54x58x58">
-                        <param name="DEBUG"            value="true">
-                        java required
-                        </applet>
+                        <div id="magLev" style="width: 380px; height: 270px; position: relative; background: url('p3-img/background.jpg'); font: 14pt Courier, monospace;">
+                            <img id="leftButton0" style="position: absolute; top: 5px; left: 5px; width: 30px; height: 15px;" />
+                            <img id="leftButton1" style="position: absolute; top: 25px; left: 5px; width: 30px; height: 15px;" />
+                            <img id="leftButton2" style="position: absolute; top: 45px; left: 5px; width: 30px; height: 15px;" />
+                            <img id="leftButton3" style="position: absolute; top: 65px; left: 5px; width: 30px; height: 15px;" />
+                            <img id="leftButton4" style="position: absolute; top: 85px; left: 5px; width: 30px; height: 15px;" />
+                            <img id="rightButton0" style="position: absolute; top: 5px; left: 345px; width: 30px; height: 15px;" />
+                            <img id="rightButton1" style="position: absolute; top: 25px; left: 345px; width: 30px; height: 15px;" />
+                            <img id="rightButton2" style="position: absolute; top: 45px; left: 345px; width: 30px; height: 15px;" />
+                            <img id="rightButton3" style="position: absolute; top: 65px; left: 345px; width: 30px; height: 15px;" />
+                            <img id="rightButton4" style="position: absolute; top: 85px; left: 345px; width: 30px; height: 15px;" />
+                            <div id="leftText" style="position: absolute; color: #636363; top: 198px; left: 5px;">0</div>
+                            <div id="rightText" style="position: absolute; color: #636363; top: 198px; left: 364px;">0</div>
+                            <img id="leftRail" style="position: absolute; top: 142px; left: 7px; width: 115px; height: 65px;" src="p3-img/nrail.gif" />
+                            <img id="rightRail" style="position: absolute; top: 142px; left: 257px; width: 115px; height: 65px;" src="p3-img/nrail.gif" />
+                            <img id="thrust" style="position: absolute; top: 40px; left: 120px; width: 140px; height: 140px;" src="p3-img/thrust.gif" />
+                            <div id="leftRailRect" style="position: absolute; top: 196px; left: 59px; width: 12px; height: 12px;" draggable="true"></div>
+                            <div id="rightRailRect" style="position: absolute; top: 196px; left: 309px; width: 12px; height: 12px;" draggable="true"></div>
+                            <div id="thrustRect" style="position: absolute; top: 100px; left: 183px; width: 12px; height: 12px;" draggable="true"></div>
+                            <div id="animation" style="position: absolute; top: 0px; left: 152px; width: 76px; height: 270px; visibility: hidden;
+                                background-image: url('p3-img/final.jpg'); background-position: center;"></div>
+                            <img id="solvedRect" style="position: absolute; top: 54px; left: 162px; width: 58px; height: 58px; visibility: hidden;" />
+                        </div>
                     </td>
                 </tr>
                 <tr>
@@ -74,5 +80,393 @@
         </script>
 
         <script type="text/javascript">(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-111383-1',{'siteSpeedSampleRate':100});ga('require','displayfeatures');ga('send','pageview');</script>
+
+        <script type="text/javascript">
+            var solved = false;
+            var railPosition = 0;
+            var leftValue = 0;
+            var rightValue = 0;
+            var thrustPosition = 0;
+            var leftButtonState = [ 1, 1, 1, 1, 1 ];
+            var rightButtonState = [ 1, 1, 1, 1, 1 ];
+            var lastClip = null;
+
+            var leftNumSet = [
+                [  1,  3,  2, 2,  1 ],
+                [  7, 40,  3, 6,  9 ],
+                [  6,  3, 18, 4, 30 ],
+                [ 38,  3,  5, 1, 22 ],
+                [  3, 21,  6, 3,  4 ],
+                [ 12,  8, 10, 2,  2 ],
+            ];
+
+            var rightNumSet = [
+                [  2, 3,  7, 20,  7 ],
+                [  8, 2, 11,  3,  5 ],
+                [  7, 1,  4,  3,  4 ],
+                [ 24, 9,  3,  1, 11 ],
+                [  2, 7,  1, 31,  2 ],
+                [ 13, 4, 21, 14,  2 ],
+            ];
+
+            var thrustNumSet = [ 1, 2, 4, 6, 8 ];
+
+            var leftButtons = [
+                document.getElementById('leftButton0'),
+                document.getElementById('leftButton1'),
+                document.getElementById('leftButton2'),
+                document.getElementById('leftButton3'),
+                document.getElementById('leftButton4'),
+            ];
+
+            var rightButtons = [
+                document.getElementById('rightButton0'),
+                document.getElementById('rightButton1'),
+                document.getElementById('rightButton2'),
+                document.getElementById('rightButton3'),
+                document.getElementById('rightButton4'),
+            ];
+
+            var leftButtonClicks = [
+                e => { leftButtonClick(0); },
+                e => { leftButtonClick(1); },
+                e => { leftButtonClick(2); },
+                e => { leftButtonClick(3); },
+                e => { leftButtonClick(4); },
+            ];
+
+            var rightButtonClicks = [
+                e => { rightButtonClick(0); },
+                e => { rightButtonClick(1); },
+                e => { rightButtonClick(2); },
+                e => { rightButtonClick(3); },
+                e => { rightButtonClick(4); },
+            ];
+
+            var leftText = document.getElementById('leftText');
+            var rightText = document.getElementById('rightText');
+            var leftRail = document.getElementById('leftRail');
+            var rightRail = document.getElementById('rightRail');
+            var leftRailRect = document.getElementById('leftRailRect');
+            var thrust = document.getElementById('thrust');
+            var thrustRect = document.getElementById('thrustRect');
+            var animation = document.getElementById('animation');
+            var solvedRect = document.getElementById('solvedRect');
+
+            var takeoffClip = new Audio('sounds/takeoff.wav');
+            var grindClip = new Audio('sounds/grind.wav');
+
+            var thrustClips = [
+                new Audio('sounds/hum1.wav'),
+                new Audio('sounds/hum2.wav'),
+                new Audio('sounds/hum3.wav'),
+                new Audio('sounds/hum4.wav'),
+                new Audio('sounds/hum5.wav'),
+            ];
+
+            var railImages = [ 'p3-img/nrail.gif', 'p3-img/nrail_on.gif' ];
+            var thrustImages = [ 'p3-img/thrust.gif', 'p3-img/thrust_on.gif' ];
+
+            // horizontally slice an image into component frames
+            function sliceImageHorizontally(img, arr, wid, ht, bottom) {
+                for (var index = 0; index < (img.width / wid); index++) {
+                    var canvas = document.createElement('canvas');
+                    canvas.width = wid;
+                    canvas.height = img.height;
+
+                    var context = canvas.getContext('2d');
+                    context.drawImage(img, index * wid, bottom, wid, ht, 0, 0, canvas.width, canvas.height);
+
+                    arr.push(canvas.toDataURL());
+                }
+            }
+
+            // image with lights indicating power levels
+            var buttonFrames = [];
+
+            var buttonImage = new Image();
+            buttonImage.onload = cutUpButton;
+            buttonImage.src = 'p3-img/button.gif';
+
+            function cutUpButton() {
+                sliceImageHorizontally(buttonImage, buttonFrames, 30, buttonImage.height, 0);
+
+                for (var i = 0; i < leftButtons.length; i++) {
+                    leftButtons[i].src = buttonFrames[1];
+                }
+
+                for (var i = 0; i < rightButtons.length; i++) {
+                    rightButtons[i].src = buttonFrames[1];
+                }
+            }
+
+            // event handling
+
+            solvedRect.addEventListener('mousedown', e => {
+                if (solved) {
+                    window.open('maglev_cookie.cgi');
+                }
+            });
+
+            var leftRailRectDrag = function(event) {
+                leftRailRectDragDrop(event, 1);
+            }
+
+            var leftRailRectDrop = function(event) {
+                leftRailRectDragDrop(event, 0);
+            }
+
+            var rightRailRectDrag = function(event) {
+                rightRailRectDragDrop(event, 1);
+            }
+
+            var rightRailRectDrop = function(event) {
+                rightRailRectDragDrop(event, 0);
+            }
+
+            var leftRailRectDragDrop = function(event, railIndex) {
+                var xPosition = event.screenX - window.screenX - event.currentTarget.parentElement.offsetLeft - 65;
+
+                railRectDragDrop(event, xPosition, railIndex);
+            }
+
+            var rightRailRectDragDrop = function(event, railIndex) {
+                var xPosition = 315 - event.screenX + window.screenX + event.currentTarget.parentElement.offsetLeft;
+
+                railRectDragDrop(event, xPosition, railIndex);
+            }
+
+            var thrustRectDrag = function(event) {
+                thrustRectDragDrop(event, 1);
+            }
+
+            var thrustRectDrop = function(event) {
+                thrustRectDragDrop(event, 0);
+            }
+
+            var railRectDragDrop = function(event, xPosition, railIndex) {
+                event.stopPropagation();
+
+                updateRailPositions(xPosition);
+                updateLeftText();
+                updateRightText();
+
+                leftRail.src = railImages[railIndex];
+                rightRail.src = railImages[railIndex];
+
+                updateAudio();
+            }
+
+            var thrustRectDragDrop = function(event, thrustIndex) {
+                event.stopPropagation();
+
+                updateThrust();
+                updateLeftText();
+                updateRightText();
+
+                thrust.src = thrustImages[thrustIndex];
+
+                updateAudio();
+            }
+
+            var leftButtonClick = function(index) {
+                leftButtonState[index] = (1 - leftButtonState[index]);
+                leftButtons[index].src = buttonFrames[leftButtonState[index]];
+
+                updateLeftText();
+                updateAudio();
+            }
+
+            var rightButtonClick = function(index) {
+                rightButtonState[index] = (1 - rightButtonState[index]);
+                rightButtons[index].src = buttonFrames[rightButtonState[index]];
+
+                updateRightText();
+                updateAudio();
+            }
+
+            leftRailRect.addEventListener('dragstart', leftRailRectDrag);
+            leftRailRect.addEventListener('drag', leftRailRectDrag);
+            leftRailRect.addEventListener('dragend', leftRailRectDrop);
+            leftRailRect.addEventListener('drop', leftRailRectDrop);
+
+            rightRailRect.addEventListener('dragstart', rightRailRectDrag);
+            rightRailRect.addEventListener('drag', rightRailRectDrag);
+            rightRailRect.addEventListener('dragend', rightRailRectDrop);
+            rightRailRect.addEventListener('drop', rightRailRectDrop);
+
+            thrustRect.addEventListener('dragstart', thrustRectDrag);
+            thrustRect.addEventListener('drag', thrustRectDrag);
+            thrustRect.addEventListener('dragend', thrustRectDrop);
+            thrustRect.addEventListener('drop', thrustRectDrop);
+
+            for (var i = 0; i < leftButtons.length; i++) {
+                leftButtons[i].addEventListener('mousedown', leftButtonClicks[i]);
+            }
+
+            for (var i = 0; i < rightButtons.length; i++) {
+                rightButtons[i].addEventListener('mousedown', rightButtonClicks[i]);
+            }
+
+            function updateLeftText() {
+                leftValue = 0;
+
+                for (var i = 0; i < leftButtonState.length; i++) {
+                    if (leftButtonState[i] == 0) {
+                        leftValue += leftNumSet[railPosition][i];
+                    }
+                }
+
+                leftValue *= thrustNumSet[thrustPosition];
+
+                leftText.textContent = leftValue;
+            }
+
+            function updateRightText() {
+                rightValue = 0;
+
+                for (var i = 0; i < rightButtonState.length; i++) {
+                    if (rightButtonState[i] == 0) {
+                        rightValue += rightNumSet[railPosition][i];
+                    }
+                }
+
+                rightValue *= thrustNumSet[thrustPosition];
+
+                rightText.textContent = rightValue;
+                rightText.style.left = 375 - rightText.offsetWidth; // keep right-aligned
+            }
+
+            function stopAudioLoop() {
+                if (lastClip != null) {
+                    lastClip.loop = false;
+                    lastClip = null;
+                }
+            }
+
+            function playAudioLoop(clip) {
+                lastClip = clip;
+                lastClip.loop = true;
+                lastClip.play();
+            }
+
+            function animationStep(step, left, width) {
+                if (step == 4) {
+                    solvedRect.style.visibility = 'visible';
+                    solvedRect.src = 'p3-img/final-but.jpg';
+                    solved = true;
+                } else {
+                    setTimeout(function() {
+                        animation.style.left = left;
+                        animation.style.width = width;
+
+                        animationStep(step + 1, left - 38, width + 76);
+                    }, 900);
+                }
+            }
+
+            function removeAllEventListeners() {
+                leftRailRect.removeEventListener('dragstart', leftRailRectDrag);
+                leftRailRect.removeEventListener('drag', leftRailRectDrag);
+                leftRailRect.removeEventListener('dragend', leftRailRectDrop);
+                leftRailRect.removeEventListener('drop', leftRailRectDrop);
+
+                rightRailRect.removeEventListener('dragstart', rightRailRectDrag);
+                rightRailRect.removeEventListener('drag', rightRailRectDrag);
+                rightRailRect.removeEventListener('dragend', rightRailRectDrop);
+                rightRailRect.removeEventListener('drop', rightRailRectDrop);
+
+                thrustRect.removeEventListener('dragstart', thrustRectDrag);
+                thrustRect.removeEventListener('drag', thrustRectDrag);
+                thrustRect.removeEventListener('dragend', thrustRectDrop);
+                thrustRect.removeEventListener('drop', thrustRectDrop);
+
+                for (var i = 0; i < leftButtons.length; i++) {
+                    leftButtons[i].removeEventListener('mousedown', leftButtonClicks[i]);
+                }
+
+                for (var i = 0; i < rightButtons.length; i++) {
+                    rightButtons[i].removeEventListener('mousedown', rightButtonClicks[i]);
+                }
+            }
+
+            function launchEndAnimation() {
+                removeAllEventListeners();
+
+                setTimeout(function() {
+                    animation.style.visibility = 'visible';
+
+                    animationStep(0, 114, 152);
+                }, 900);
+            }
+
+            function updateAudio() {
+                stopAudioLoop();
+
+                if ((leftValue == 0) && (rightValue == 0)) {
+                    // both sides "off"; no audio
+                    return;
+                }
+
+                // side imbalanced; "grind" gears
+                if (leftValue != rightValue) {
+                    playAudioLoop(grindClip);
+
+                    return;
+                }
+
+                if (leftValue == 48) {
+                    takeoffClip.play();
+
+                    launchEndAnimation();
+                } else {
+                    // humming engine sound
+                    playAudioLoop(thrustClips[thrustPosition]);
+                }
+            }
+
+            function updateRailPositions(xPosition) {
+                if (xPosition < 0) {
+                    xPosition = 0;
+                }
+
+                if (xPosition > 50) {
+                    xPosition = 50;
+                }
+
+                var level = Math.round(xPosition / 10.0);
+
+                leftRailRect.style.left = 59 + level * 10;
+                rightRailRect.style.left = 309 - level * 10;
+
+                leftRail.style.left = 7 + level * 10;
+                rightRail.style.left = 257 - level * 10;
+
+                if (railPosition != level) {
+                    railPosition = level;
+                }
+            }
+
+            function updateThrust() {
+                var yPosition = 180 - event.screenY + window.screenY + event.currentTarget.parentElement.offsetTop;
+
+                if (yPosition < 0) {
+                    yPosition = 0;
+                }
+
+                if (yPosition > 40) {
+                    yPosition = 40;
+                }
+
+                var level = Math.round(yPosition / 10.0);
+
+                thrustRect.style.top = 100 - level * 10;
+                thrust.style.top = 40 - level * 10;
+
+                if (thrustPosition != level) {
+                    thrustPosition = level;
+                }
+            }
+        </script>
     </body>
 </html>
