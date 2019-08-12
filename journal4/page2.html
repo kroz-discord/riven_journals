@@ -17,9 +17,7 @@
                 <tr>
                     <td valign="bottom" align="right" width="85"><img width="85" height="190" src="img/page2b.jpg" border="0"></td>
                     <td valign="top" align="center" width="333">
-                        <applet code="Dot3DApp.class" width="333" height="190">
-                            <img width="333" height="190" src="img/nonjava.gif" border="0">
-                        </applet>
+                        <img id="viewer" style="top: 0px; left: 0px; width: 333px; height: 190px; background-color: black;" />
                     </td>
                     <td valign="bottom" align="left" width="102"><img width="102" height="190" src="img/page2c.jpg" border="0"></td>
                 </tr>
@@ -56,5 +54,169 @@
         </script>
 
         <script type="text/javascript">(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-111383-1',{'siteSpeedSampleRate':100});ga('require','displayfeatures');ga('send','pageview');</script>
+
+        <script type="text/javascript">
+            var uniqueStars = 24; // number of unique stars (an equal number are "mirror" stars)
+            var absPos = []; // absolute position of the stars
+            var relPos = []; // position of the stars relative to the camera
+            var zmax = 0; // the distance to the furthest star
+            var zmin = 0; // the distance to the closest star
+            var frameCount = 0; // number of animation frames rendered so far
+            var cameraFocalLength = 3.2;
+            var viewer = document.getElementById('viewer');
+
+            var canvas = document.createElement('canvas');
+            canvas.width = viewer.width;
+            canvas.height = viewer.height;
+
+            var context = canvas.getContext('2d');
+
+            // positions four stars in the sky
+            var createStars = function(startIndex, distance, rotX, rotY, rotZ) {
+                var sinX = Math.sin(rotX);
+                var cosX = Math.cos(rotX);
+                var sinY = Math.sin(rotY);
+                var cosY = Math.cos(rotY);
+                var sinZ = Math.sin(rotZ);
+                var cosZ = Math.cos(rotZ);
+
+                absPos[startIndex + 0] = [
+                    distance * (sinX * sinY * cosZ + cosX * sinZ + sinX * sinZ - cosY * cosZ - cosX * sinY * cosZ),
+                    distance * (sinX * sinY * sinZ - cosY * sinZ - cosX * cosZ - sinX * cosZ - cosX * sinY * sinZ),
+                    distance * (sinY + sinX * cosY - cosX * cosY),
+                ]
+
+                absPos[startIndex + 1] = [
+                    distance * (cosY * cosZ + sinX * sinY * cosZ + cosX * sinZ + sinX * sinZ - cosX * sinY * cosZ),
+                    distance * (cosY * sinZ - cosX * cosZ + sinX * sinY * sinZ - sinX * cosZ - cosX * sinY * sinZ),
+                    distance * (sinX * cosY - sinY - cosX * cosY),
+                ];
+
+                absPos[startIndex + 2] = [
+                    distance * (cosY * cosZ - sinX * sinY * cosZ - cosX * sinZ - cosX * sinY * cosZ + sinX * sinZ),
+                    distance * (cosY * sinZ + cosX * cosZ - sinX * sinY * sinZ - sinX * cosZ - cosX * sinY * sinZ),
+                    distance * (- sinY - sinX * cosY - cosX * cosY),
+                ];
+
+                absPos[startIndex + 3] = [
+                    distance * (sinX * sinZ - cosY * cosZ - sinX * sinY * cosZ - cosX * sinZ - cosX * sinY * cosZ),
+                    distance * (cosX * cosZ - cosY * sinZ - sinX * sinY * sinZ - sinX * cosZ - cosX * sinY * sinZ),
+                    distance * (sinY - sinX * cosY - cosX * cosY),
+                ];
+            }
+
+            // determines the relative position of the stars as the camera moves
+            var calculateFrame = function() {
+                var dist = Math.sin(frameCount * 1.0 * (Math.PI / 180.0)) * 2.0 + 6.6;
+                var rotZ = Math.sin(frameCount * 0.9 * (Math.PI / 180.0)) * 2.0 * Math.PI;
+                var rotY = Math.sin(frameCount * 0.8 * (Math.PI / 180.0)) * 2.0 * Math.PI;
+                var rotX = (65.0 / 360.0) * 2.0 * Math.PI;
+                var sinX = Math.sin(rotX);
+                var cosX = Math.cos(rotX);
+                var sinY = Math.sin(rotY);
+                var cosY = Math.cos(rotY);
+                var sinZ = Math.sin(rotZ);
+                var cosZ = Math.cos(rotZ);
+
+                for (var index = 0; index < uniqueStars; index++) {
+                    var vertX = absPos[index][0];
+                    var vertY = absPos[index][1];
+                    var vertZ = absPos[index][2];
+
+                    relPos[index] = [
+                        dist * (vertX * cosZ * cosY - vertY * sinZ * cosY + vertZ * sinY),
+                        dist * (vertX * (sinZ * cosX - cosZ * sinY * sinX) + vertY * (cosZ * cosX + sinZ * sinY * sinX) + vertZ * cosY * sinX),
+                        dist * (vertX * (- cosZ * sinY * cosX - sinZ * sinX) + vertY * (sinZ * sinY * cosX - cosZ * sinX) + vertZ * cosY * cosX) + 8,
+                    ];
+                }
+            }
+
+            var findMaxAndMinZ = function() {
+                zmin = 1000000;
+                zmax = -zmin;
+
+                for (var index = 0; index < uniqueStars; index++) {
+                    var z = relPos[index][2];
+
+                    zmin = Math.min(zmin, z, 16 - z);
+                    zmax = Math.max(zmax, z, 16 - z);
+                }
+
+                zmin = Math.max(zmin, -cameraFocalLength);
+            }
+
+            // draws the whole frame
+            var drawFrame = function() {
+                // first, clear the frame to prevent stars leaving a trail behind them
+                context.fillStyle = 'black';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+
+                // draw the stars
+                for (var index = 0; index < uniqueStars; index++) {
+                    var x = relPos[index][0];
+                    var y = relPos[index][1];
+                    var z = relPos[index][2];
+
+                    drawStar(x, y, z); // calculated star
+                    drawStar(-x, -y, 16 - z); // "mirror" star
+                }
+
+                // show it to the user
+                viewer.src = canvas.toDataURL();
+            }
+
+            // draws a single star
+            var drawStar = function(x, y, z) {
+                // how far in front of the camera the star is located
+                var distance = z + cameraFocalLength;
+
+                if (distance <= 0) {
+                    // can't draw a star that's behind us
+                    return;
+                }
+
+                // brightness of the star is determined by distance
+                var grayscale = 255 - Math.floor(255.0 * (z - zmin) / (zmax - zmin));
+
+                // note that this also limits the diameter of the star
+                if ((grayscale > 255) || (grayscale < 0)) {
+                    grayscale = 255;
+                }
+
+                // size of star is (indirectly) determined by distance
+                var diameter = grayscale / 32 + 2;
+
+                // center of viewer + distance to center of star - distance from center of star to edge of star
+                var left = (canvas.width / 2) + Math.floor(50.0 * cameraFocalLength * x / distance) - (diameter / 2);
+                var top = (canvas.height / 2) + Math.floor(50.0 * cameraFocalLength * y / distance) - (diameter / 2);
+
+                context.fillStyle = 'rgb(' + grayscale + ', ' + grayscale + ', ' + grayscale + ')';
+                context.fillRect(left, top, diameter, diameter);
+            }
+
+            window.onload = function(event) {
+                // these stars are the same every time
+                createStars(0, 1, 0, 0, 0);
+
+                // these stars are randomly generated
+                for (var index = 1; index <= 5; index++) {
+                    createStars(
+                        index * 4,
+                        (1.0 - Math.random() * 0.4),
+                        (Math.random() * 2.0 * Math.PI),
+                        (Math.random() * 2.0 * Math.PI),
+                        (Math.random() * 2.0 * Math.PI)
+                    );
+                }
+
+                setInterval(function() {
+                    calculateFrame();
+                    findMaxAndMinZ();
+                    drawFrame();
+
+                    frameCount++;
+                }, 100);
+            }
+        </script>
     </body>
 </html>
