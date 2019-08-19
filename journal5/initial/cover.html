@@ -22,13 +22,7 @@
                             <td align="left" valign="top" width="204"><img
                                 src="img/lock_left.jpg" border="0" height="133" width="204" usemap="#left"></td>
                             <td align="left" valign="top" width="171">
-                                <!--
-                                    <a href="../post_initial/index.html" target="_top"><img
-                                        src="img/lock_temp.jpg" border="0" height="133" width="171">
-                                -->
-                                <applet code="Grid.class" width=171 height=133>
-                                    get java
-                                </applet>
+                                <div id="lock" style="width: 171px; height: 133px; position: relative; background-image: url('images/back.gif');"></div>
                             </td>
                             <td align="left" valign="top" width="165"><img
                                 src="img/lock_right.jpg" border="0" height="133" width="165" usemap="#right"></td>
@@ -78,6 +72,166 @@
                 </script>
 
                 <script type="text/javascript">(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-111383-1',{'siteSpeedSampleRate':100});ga('require','displayfeatures');ga('send','pageview');</script>
+
+                <script type="text/javascript">
+                    var finalAnimation = [
+                        'url("images/final1.jpg")',
+                        'url("images/final2.jpg")',
+                        'url("images/final3.jpg")',
+                        'url("images/final4.jpg")',
+                        'url("images/final5.jpg")'
+                    ];
+
+                    var gridStatus = [
+                        [ false, false, false, false, false, false, false, false ],
+                        [ false, false, false, false, false, false, false, false ],
+                        [ false, false, false, false, false, false, false, false ],
+                        [ false, false, false, false, false, false, false, false ],
+                        [ false, false, false, false, false, false, false, false ],
+                        [ false, false, false, false, false, false, false, false ]
+                    ];
+                    var gridSolution = [
+                        [ false, false, false, true,  false, false, true,  false ],
+                        [ true,  false, false, true,  false, true,  false, false ],
+                        [ false, false, false, true,  true,  false, true,  true  ],
+                        [ true,  true,  true,  false, true,  false, false, true  ],
+                        [ true,  true,  true,  false, false, false, true,  true  ],
+                        [ false, false, true,  true,  true,  false, true,  false ]
+                    ];
+
+                    var buttonClick = new Audio('sounds/grid.wav');
+                    var finishClip = new Audio('sounds/grid_done.wav');
+                    var lock = document.getElementById('lock');
+                    var buttons = [];
+                    var on = 'images/on.gif';
+
+                    // a hack to avoid creating a new "off" image
+                    var off = null;
+                    var offImage = new Image();
+                    offImage.onload = cutUpOff;
+                    offImage.src = 'images/back.gif';
+
+                    function cutUpOff() {
+                        var canvas = document.createElement('canvas');
+                        canvas.width = 20;
+                        canvas.height = 20;
+
+                        var context = canvas.getContext('2d');
+                        context.drawImage(offImage, 4, 4, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+
+                        off = canvas.toDataURL();
+                    }
+
+                    // determines if two arrays are equal; handles nested arrays
+                    var arraysAreEqual = function(left, right) {
+                        if ((left == null) || (right == null)) {
+                            return (left == null) && (right == null);
+                        }
+
+                        if (!Array.isArray(left) || !Array.isArray(right)) {
+                            // not comparing two arrays for some reason
+                            return left == right;
+                        }
+
+                        if (left.length != right.length) {
+                            // two arrays of different lengths are unequal
+                            return false;
+                        }
+
+                        for (var index = 0; index < left.length; index++) {
+                            if (Array.isArray(left[index])) {
+                                if (!arraysAreEqual(left[index], right[index])) {
+                                    return false;
+                                }
+                            } else if (left[index] != right[index]) {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    }
+
+                    var showFinalAnimation = function(index) {
+                        if (index == finalAnimation.length) {
+                            lock.addEventListener('mousedown', function(event) {
+                                // TODO: address the lack of .cgi support
+                                // window.open('grid_cookie.cgi');
+                                window.location.href = '../post_initial/index.html';
+                            });
+
+                            return;
+                        }
+
+                        lock.style.backgroundImage = finalAnimation[index];
+
+                        setTimeout(function() {
+                            showFinalAnimation(index + 1);
+                        }, 230);
+                    }
+
+                    var clickButton = function(event) {
+                        // figure out which button was clicked
+                        var rowColumn = null;
+
+                        for (var row = 0; row < buttons.length; row++) {
+                            var buttonRow = buttons[row];
+
+                            for (var column = 0; column < buttonRow.length; column++) {
+                                if (buttonRow[column] == event.target) {
+                                    rowColumn = [row, column];
+                                }
+                            }
+                        }
+
+                        buttonClick.play();
+
+                        // toggle button
+                        gridStatus[rowColumn[0]][rowColumn[1]] = !gridStatus[rowColumn[0]][rowColumn[1]];
+                        event.target.src = gridStatus[rowColumn[0]][rowColumn[1]] ? on : off;
+
+                        if (arraysAreEqual(gridStatus, gridSolution)) {
+                            for (var row = 0; row < buttons.length; row++) {
+                                var buttonRow = buttons[row];
+
+                                for (var column = 0; column < buttonRow.length; column++) {
+                                    buttonRow[column].style.visibility = 'hidden';
+                                }
+                            }
+
+                            lock.style.backgroundImage = finalAnimation[0];
+
+                            setTimeout(function() {
+                                finishClip.play();
+
+                                setTimeout(function() {
+                                    showFinalAnimation(0);
+                                }, 50);
+                            }, 300);
+                        }
+                    }
+
+                    window.onload = function(event) {
+                        // dynamically create DOM elements for each clickable region (probably better than having 48 <img> tags in the <div> above)
+                        for (var row = 0; row < 6; row++) {
+                            buttons[row] = [];
+
+                            for (var column = 0; column < 8; column++) {
+                                var element = document.createElement('img');
+                                element.style.position = 'absolute';
+                                element.style.top = (row * 20 + 10) + 'px';
+                                element.style.left = (column * 20 + 10) + 'px';
+                                element.style.width = '20px';
+                                element.style.height = '20px';
+                                element.src = off;
+                                element.addEventListener('mousedown', clickButton);
+
+                                buttons[row][column] = element;
+
+                                lock.appendChild(element);
+                            }
+                        }
+                    }
+                </script>
             </body>
         </noframes>
     </frameset>
