@@ -14,27 +14,7 @@
                 <tr>
                     <td valign="bottom" align="right" width="9"><img width="9" height="246" src="img/page5b.jpg" border="0"></td>
                     <td valign="top" align="left" width="500">
-                        <applet code="MinnieMap.class" width=500 height=246>
-                            <param name="TOP_DIR"          value="">
-                            <param name="WATCH_IMG"        value="watch.gif">
-                            <param name="MAPOFF_IMG"       value="mapoff.jpg">
-                            <param name="MAPON_IMG"        value="mapon.jpg">
-                            <param name="X_REGIONS"        value=5>
-                            <param name="Y_REGIONS"        value=6>
-                            <param name="DEFCLICK_SND"     value="click1.wav">
-                            <param name="HINTCLICK_SND"    value="click2.wav">
-                            <param name="FINAL_IMG_PREFIX" value="final">
-                            <param name="FINAL_IMG_SUFFIX" value=".jpg">
-                            <param name="FINAL_IMG_COUNT"  value=3>
-                            <param name="FINAL_IMG_X"      value=100>
-                            <param name="FINAL_IMG_Y"      value=41>
-                            <param name="FINAL_SND_WRONG"  value="final1.wav">
-                            <param name="FINAL_SND_RIGHT"  value="final2.wav">
-                            <param name="BACKGROUND_COLOR" value="ffffff">
-                            <param name="FOREGROUND_COLOR" value="ffffff">
-                            <param name="DEBUG"            value="true">
-                            java required
-                        </applet>
+                        <div id="miniMap" style="width: 500px; height: 246px; position: relative;"></div>
                     </td>
                     <td valign="bottom" align="right" width="11"><img width="11" height="246" src="img/page5c.jpg" border="0"></td>
                 </tr>
@@ -77,5 +57,327 @@
         </script>
 
         <script type="text/javascript">(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-111383-1',{'siteSpeedSampleRate':100});ga('require','displayfeatures');ga('send','pageview');</script>
+
+        <script type="text/javascript">
+            var regionElements = []; // various clickable regions on the map
+            var clickCounter = 0; // number of clicks user entered during this sequence
+            var clickSequence = []; // the actual sequence of regions clicked by the user
+            var submitRegion = null; // the region the user must click to "submit" a sequence
+            var finalImage = null; // the element where the final animation will be displayed
+
+            var miniMap = document.getElementById('miniMap');
+            var finalImages = ['final1.jpg', 'final2.jpg', 'final3.jpg'];
+            var defaultClick = new Audio('click1.wav');
+            var specialClick = new Audio('click2.wav');
+            var incorrectFinal = new Audio('final1.wav');
+            var correctFinal = new Audio('final2.wav');
+
+            var behaviors = loadBehaviors();
+            var solution = loadSolution();
+
+            // horizontally slice an image into component frames
+            function sliceImageHorizontally(img, arr, wid, ht, bottom) {
+                for (var index = 0; index < (img.width / wid); index++) {
+                    var canvas = document.createElement('canvas');
+                    canvas.width = wid;
+                    canvas.height = img.height;
+
+                    var context = canvas.getContext('2d');
+                    context.drawImage(img, index * wid, bottom, wid, ht, 0, 0, canvas.width, canvas.height);
+
+                    arr.push(canvas.toDataURL());
+                }
+            }
+
+            // determines if two arrays are equal; handles nested arrays
+            var arraysAreEqual = function(left, right) {
+                if ((left == null) || (right == null)) {
+                    return (left == null) && (right == null);
+                }
+
+                if (!Array.isArray(left) || !Array.isArray(right)) {
+                    // not comparing two arrays for some reason
+                    return left == right;
+                }
+
+                if (left.length != right.length) {
+                    // two arrays of different lengths are unequal
+                    return false;
+                }
+
+                for (var index = 0; index < left.length; index++) {
+                    if (Array.isArray(left[index])) {
+                        if (!arraysAreEqual(left[index], right[index])) {
+                            return false;
+                        }
+                    } else if (left[index] != right[index]) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            // the map contents when "lit up"
+            var mapOnFrames = [[], [], [], [], [], []];
+
+            var mapOnImage = new Image();
+            mapOnImage.onload = cutUpMapOn;
+            mapOnImage.src = 'mapon.jpg';
+
+            function cutUpMapOn() {
+                for (index = 0; index < mapOnFrames.length; index ++) {
+                    sliceImageHorizontally(mapOnImage, mapOnFrames[index], 100, 41, 41 * index);
+                }
+            }
+
+            // the map contents when not "lit up"
+            var mapOffFrames = [[], [], [], [], [], []];
+
+            var mapOffImage = new Image();
+            mapOffImage.onload = cutUpMapOff;
+            mapOffImage.src = 'mapoff.jpg';
+
+            function cutUpMapOff() {
+                for (index = 0; index < mapOffFrames.length; index ++) {
+                    sliceImageHorizontally(mapOffImage, mapOffFrames[index], 100, 41, 41 * index);
+                }
+            }
+
+            // animation when puzzle is solved
+            var showFinalImage = function(index) {
+                if (index == finalImages.length) {
+                    // no more frames to animate
+                    return;
+                }
+
+                finalImage.style.visibility = 'visible';
+                finalImage.src = finalImages[index];
+
+                setTimeout(function() {
+                    showFinalImage(index + 1);
+                }, 400);
+            }
+
+            // event handler for most regions of map
+            var clickRegion = function(event) {
+                if (clickCounter == solution.sequence.length) {
+                    // full sequence entered; user must submit to continue
+                    return;
+                }
+
+                // figure out which region was clicked
+                var rowColumn = null;
+
+                for (var row = 0; row < regionElements.length; row++) {
+                    var regionRow = regionElements[row];
+
+                    for (var column = 0; column < regionRow.length; column++) {
+                        if (regionRow[column] == event.target) {
+                            rowColumn = [row, column];
+                        }
+                    }
+                }
+
+                // record which region the user selected
+                clickSequence[clickCounter] = rowColumn;
+
+                // play a sound depending on if the user clicked the right place at the right time
+                if (arraysAreEqual(rowColumn, solution.sequence[clickCounter])) {
+                    specialClick.play();
+                } else {
+                    defaultClick.play();
+                }
+
+                clickCounter++;
+
+                if (clickCounter == solution.sequence.length) {
+                    // time to light up submit area; user must click there next
+                    submitRegion.src = mapOnFrames[solution.region[0]][solution.region[1]];
+                }
+
+                // figure out which other areas of the map to light up
+                var activations = behaviors[rowColumn[0]][rowColumn[1]].activate;
+
+                for (var index = 0; index < activations.length; index++) {
+                    var activation = activations[index];
+                    var row = activation[0];
+                    var column = activation[1];
+
+                    regionElements[row][column].src = mapOnFrames[row][column];
+                }
+
+                // figure out which areas of the map to make dark
+                var deactivations = behaviors[rowColumn[0]][rowColumn[1]].deactivate;
+
+                for (var index = 0; index < deactivations.length; index++) {
+                    var deactivation = deactivations[index];
+                    var row = deactivation[0];
+                    var column = deactivation[1];
+
+                    regionElements[row][column].src = mapOffFrames[row][column];
+                }
+            }
+
+            // event handler for "submit" region of map
+            var clickSubmitRegion = function(event) {
+                if (clickCounter != solution.sequence.length) {
+                    // cannot submit a partial sequence
+                    return;
+                }
+
+                specialClick.play();
+
+                // did the user provide the correct sequence?
+                if (arraysAreEqual(solution.sequence, clickSequence)) {
+                    // prevent playing final animation twice
+                    submitRegion.removeEventListener('mousedown', clickSubmitRegion);
+
+                    // final animation; puzzle over
+                    setTimeout(function() {
+                        correctFinal.play();
+
+                        setTimeout(function() {
+                            showFinalImage(0);
+                        }, 50);
+                    }, 750);
+                } else {
+                    incorrectFinal.play();
+
+                    // reset everything; start over
+                    for (var row = 0; row < regionElements.length; row++) {
+                        var regionRow = regionElements[row];
+
+                        for (var column = 0; column < regionRow.length; column++) {
+                            regionRow[column].src = mapOffFrames[row][column];
+                        }
+                    }
+
+                    clickSequence = [];
+                    clickCounter = 0;
+                }
+            }
+
+            window.onload = function(event) {
+                // dynamically create DOM elements for each clickable region (probably better than having 30 <img> tags in the <div> above)
+                for (var row = 0; row < 6; row++) {
+                    regionElements[row] = [];
+
+                    for (var column = 0; column < 5; column++) {
+                        var element = document.createElement('img');
+                        element.style.position = 'absolute';
+                        element.style.top = (row * 41) + 'px';
+                        element.style.left = (column * 100) + 'px';
+                        element.style.width = '100px';
+                        element.style.height = '41px';
+                        element.src = mapOffFrames[row][column];
+
+                        if (arraysAreEqual(solution.region, [row, column])) {
+                            element.addEventListener('mousedown', clickSubmitRegion);
+
+                            submitRegion = element;
+                        } else {
+                            element.addEventListener('mousedown', clickRegion);
+                        }
+
+                        regionElements[row][column] = element;
+
+                        miniMap.appendChild(element);
+                    }
+                }
+
+                // dynamically create DOM element for final animation (necessary to ensure it rests *above* the other dynamic elements)
+                finalImage = document.createElement('img');
+                finalImage.style.position = 'absolute';
+                finalImage.style.top = '41px';
+                finalImage.style.left = '100px';
+                finalImage.style.width = '112px';
+                finalImage.style.height = '200px';
+                finalImage.style.visibility = 'hidden';
+
+                // event cannot be fired until finalImage is visible
+                finalImage.addEventListener('mousedown', function(event) {
+                    window.open('chron_cookie.cgi');
+                });
+
+                miniMap.appendChild(finalImage);
+            }
+
+            function loadBehaviors() {
+                // TODO: Extract to its own json file?
+                return [
+                    // row 0
+                    [
+                        { 'activate': [ [0, 0], [1, 3], [2, 3], [3, 1] ], 'deactivate': [ [0, 4], [3, 3]                         ] },
+                        { 'activate': [ [0, 1], [1, 2], [3, 1], [4, 0] ], 'deactivate': [ [0, 2], [3, 3], [3, 4]                 ] },
+                        { 'activate': [ [0, 2], [1, 1], [3, 3], [5, 1] ], 'deactivate': [ [0, 0], [4, 1], [4, 2]                 ] },
+                        // TODO: [2, 2] is the submit region; maybe that shouldn't be in here?
+                        { 'activate': [ [0, 3], [1, 0]                 ], 'deactivate': [ [0, 4], [1, 3], [2, 0], [2, 2], [3, 4] ] },
+                        { 'activate': [ [0, 4], [1, 0], [2, 0]         ], 'deactivate': [ [1, 4], [4, 1]                         ] }
+                    ],
+
+                    // row 1
+                    [
+                        { 'activate': [ [0, 2], [1, 0]                         ], 'deactivate': [ [1, 2], [2, 1], [5, 2] ] },
+                        { 'activate': [ [1, 1], [3, 1]                         ], 'deactivate': [ [0, 4], [5, 4]         ] },
+                        { 'activate': [ [0, 1], [1, 2], [2, 3], [3, 1], [3, 3] ], 'deactivate': [                        ] },
+                        { 'activate': [ [0, 4], [1, 3], [2, 0], [3, 4], [5, 1] ], 'deactivate': [ [4, 2], [5, 2]         ] },
+                        { 'activate': [ [1, 4]                                 ], 'deactivate': [ [0, 0], [0, 3], [3, 1] ] }
+                    ],
+
+                    // row 2
+                    [
+                        { 'activate': [ [1, 0], [2, 0], [3, 3], [4, 4] ], 'deactivate': [                                ] },
+                        { 'activate': [ [2, 1], [3, 1]                 ], 'deactivate': [ [2, 3], [5, 0]                 ] },
+                        { 'activate': [ [2, 2]                         ], 'deactivate': [ [1, 3], [1, 4], [2, 3], [2, 4] ] },
+                        { 'activate': [ [3, 1], [3, 3], [4, 0]         ], 'deactivate': [                                ] },
+                        { 'activate': [ [2, 4], [5, 4]                 ], 'deactivate': [ [3, 1], [5, 3]                 ] }
+                    ],
+
+                    // row 3
+                    [
+                        { 'activate': [ [0, 3], [0, 4], [3, 0]         ], 'deactivate': [ [0, 2], [1, 1], [1, 4], [2, 0], [4, 1] ] },
+                        { 'activate': [ [2, 3], [3, 1], [4, 0], [4, 1] ], 'deactivate': [ [4, 2]                                 ] },
+                        { 'activate': [ [3, 1], [3, 2]                 ], 'deactivate': [ [1, 4], [4, 3], [5, 1]                 ] },
+                        { 'activate': [ [0, 0], [2, 1], [3, 3]         ], 'deactivate': [ [2, 4], [4, 3], [5, 3]                 ] },
+                        { 'activate': [ [3, 4], [4, 0]                 ], 'deactivate': [                                        ] }
+                    ],
+
+                    // row 4
+                    [
+                        { 'activate': [ [2, 3], [4, 0], [4, 1]         ], 'deactivate': [ [4, 2], [5, 1]                 ] },
+                        { 'activate': [ [4, 1], [5, 3], [5, 4]         ], 'deactivate': [ [1, 2], [2, 0], [3, 3], [4, 3] ] },
+                        { 'activate': [ [0, 0], [2, 3], [4, 2]         ], 'deactivate': [ [1, 1], [3, 2], [5, 3]         ] },
+                        { 'activate': [ [2, 1], [2, 3], [4, 3]         ], 'deactivate': [ [1, 0], [3, 1], [5, 1]         ] },
+                        { 'activate': [ [2, 0], [3, 2], [4, 1], [4, 4] ], 'deactivate': [ [4, 3]                         ] }
+                    ],
+
+                    // row 5
+                    [
+                        { 'activate': [ [4, 2], [4, 3], [5, 0]         ], 'deactivate': [ [2, 0], [2, 3], [5, 4] ] },
+                        {
+                            'activate': [
+                                // TODO: clicking this region lights up the whole grid; is this test code?
+                                [0, 0], [0, 1], [0, 2], [0, 3], [0, 4],
+                                [1, 0], [1, 1], [1, 2], [1, 3], [1, 4],
+                                [2, 0], [2, 1],         [2, 3], [2, 4],
+                                [3, 0], [3, 1], [3, 2], [3, 3], [3, 4],
+                                [4, 0], [4, 1], [4, 2], [4, 3], [4, 4],
+                                [5, 0], [5, 1], [5, 2], [5, 3], [5, 4]
+                            ],
+                            'deactivate': [ ]
+                        },
+                        { 'activate': [ [3, 3], [4, 1], [5, 2]         ], 'deactivate': [ [0, 1]                 ] },
+                        { 'activate': [ [2, 0], [4, 1], [5, 3], [5, 4] ], 'deactivate': [ [2, 3], [3, 0], [4, 3] ] },
+                        { 'activate': [ [2, 3], [3, 1], [5, 4]         ], 'deactivate': [ [1, 3], [3, 4], [5, 3] ] }
+                    ]
+                ];
+            }
+
+            function loadSolution() {
+                // TODO: Extract to its own json file?
+                return { 'sequence': [ [4, 2], [5, 3], [3, 0], [1, 1], [1, 4] ], 'region': [2, 2] };
+            }
+        </script>
     </body>
 </html>
