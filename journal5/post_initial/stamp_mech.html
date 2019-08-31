@@ -331,7 +331,9 @@
 
             workArea.addEventListener('mousedown', function(event) {
                 if (gameOver && !animating) {
-                    window.open('p5_cookie.cgi');
+                    // TODO: address the lack of .cgi support
+                    // window.open('p5_cookie.cgi');
+                    window.top.location.href = '../../template.html';
                 }
             });
 

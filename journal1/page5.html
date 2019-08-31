@@ -119,7 +119,9 @@
             // the final button to click to record the puzzle solution
             function doSubmit() {
                 if (solved) {
-                    window.open('cookie.cgi');
+                    // TODO: address the lack of .cgi support
+                    // window.open('cookie.cgi');
+                    window.top.location.href = '../temple.html';
                 }
             }
 

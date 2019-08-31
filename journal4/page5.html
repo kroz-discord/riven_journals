@@ -297,7 +297,9 @@
 
                 // event cannot be fired until finalImage is visible
                 finalImage.addEventListener('mousedown', function(event) {
-                    window.open('chron_cookie.cgi');
+                    // TODO: address the lack of .cgi support
+                    // window.open('chron_cookie.cgi');
+                    window.top.location.href = '../temple.html';
                 });
 
                 miniMap.appendChild(finalImage);

@@ -204,7 +204,9 @@
 
             solvedRect.addEventListener('mousedown', e => {
                 if (solved) {
-                    window.open('maglev_cookie.cgi');
+                    // TODO: address the lack of .cgi support
+                    // window.open('maglev_cookie.cgi');
+                    window.top.location.href = '../temple.html';
                 }
             });
 

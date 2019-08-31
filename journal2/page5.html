@@ -228,7 +228,9 @@
 
                 nextGeneration.addEventListener('mousedown', e => {
                     if (done) {
-                        window.open('cookie.cgi');
+                        // TODO: address the lack of .cgi support
+                        // window.open('cookie.cgi');
+                        window.top.location.href = '../temple.html';
 
                         return;
                     }
@@ -293,7 +295,9 @@
 
                 breedButton.addEventListener('mousedown', e => {
                     if (done) {
-                        window.open('cookie.cgi');
+                        // TODO: address the lack of .cgi support
+                        // window.open('cookie.cgi');
+                        window.top.location.href = '../temple.html';
 
                         return;
                     }
