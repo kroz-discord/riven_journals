@@ -22,23 +22,26 @@
                 </tr>
                 <tr>
                     <td align="center" colspan="3">
-                        <applet code="Stamp.class" width=540 height=114 name="stamp2"><param name="name" value="stamp2">get java</applet>
+                        <img id="stamp2" style="width: 540px; height: 114px; position: relative;" src="images/puzzle2/p2-fliped3.jpg" />
                     </td>
                 </tr>
                 <tr>
                     <td align="right">
-                        <applet code="Stamp.class" width=147 height=140 name="stamp1"><param name="name" value="stamp1">get java</applet>
+                        <img id="stamp1" style="width: 147px; height: 140px; position: relative;" src="images/puzzle1/p1-fliped3.jpg" />
                     </td>
                     <td>
-                        <applet code="Pony.class" width=246 height=140><param name="state" value="">get java</applet>
+                        <div id="puzzle" style="width: 246px; height: 140px; position: relative; background-image: url('images/back.jpg');">
+                            <div id="workArea" style="top: 26px; left: 79px; width: 90px; height: 90px; position: absolute;"></div>
+                            <div id="button" style="top: 118px; left: 177px; width: 11px; height: 11px; position: absolute;"></div>
+                        </div>
                     </td>
                     <td align="left">
-                        <applet code="Stamp.class" width=147 height=140 name="stamp3"><param name="name" value="stamp3">get java</applet>
+                        <img id="stamp3" style="width: 147px; height: 140px; position: relative;" src="images/puzzle3/p3-fliped3.jpg" />
                     </td>
                 </tr>
                 <tr>
                     <td align="center" colspan=3>
-                        <applet code="Stamp.class" width=540 height=126 name="stamp4"><param name="name" value="stamp4">get java</applet>
+                        <img id="stamp4" style="width: 540px; height: 126px; position: relative;" src="images/puzzle4/p4-fliped3.jpg" />
                     </td>
                 </tr>
                 <tr>
@@ -76,5 +79,406 @@
         </script>
 
         <script type="text/javascript">(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-111383-1',{'siteSpeedSampleRate':100});ga('require','displayfeatures');ga('send','pageview');</script>
+
+        <script type="text/javascript">
+            var animating = false; // disable user interaction during animations
+            var solved = false; // did the user solve this puzzle?
+            var gameOver = false; // is everything over?
+            var currentPuzzle = 0; // there are four puzzles on this page
+            var puzzle = document.getElementById('puzzle'); // the whole puzzle area
+            var button = document.getElementById('button'); // the button that validates the current puzzle
+            var workArea = document.getElementById('workArea'); // the area where each puzzle is assembled
+            var puzzleData = loadPuzzleData();
+            var puzzleContents = [];
+            var dragOffset = []; // used by drag-and-drop
+            var buttonClickCorrect = new Audio('sounds/stamp.wav');
+            var buttonClickIncorrect = new Audio('sounds/stamp_wrong.wav');
+            var endingAudio = new Audio('sounds/stamp_done.wav');
+
+            var stamps = [
+                document.getElementById('stamp1'),
+                document.getElementById('stamp2'),
+                document.getElementById('stamp3'),
+                document.getElementById('stamp4')
+            ];
+
+            var stampFrames = [
+                [
+                    'url("images/puzzle1/p1-solved1.jpg")',
+                    'url("images/puzzle1/p1-solved2.jpg")',
+                    'url("images/puzzle1/p1-solved3.jpg")'
+                ],
+                [
+                    'url("images/puzzle2/p2-solved1.jpg")',
+                    'url("images/puzzle2/p2-solved2.jpg")',
+                    'url("images/puzzle2/p2-solved3.jpg")'
+                ],
+                [
+                    'url("images/puzzle3/p3-solved1.jpg")',
+                    'url("images/puzzle3/p3-solved2.jpg")',
+                    'url("images/puzzle3/p3-solved3.jpg")'
+                ],
+                [
+                    'url("images/puzzle4/p4-solved1.jpg")',
+                    'url("images/puzzle4/p4-solved2.jpg")',
+                    'url("images/puzzle4/p4-solved3.jpg")'
+                ]
+            ];
+
+            var stampFinishFrames = [
+                [
+                    'images/puzzle1/p1-fliped3.jpg',
+                    'images/puzzle1/p1-fliped2.jpg',
+                    'images/puzzle1/p1-fliped1.jpg'
+                ],
+                [
+                    'images/puzzle2/p2-fliped3.jpg',
+                    'images/puzzle2/p2-fliped2.jpg',
+                    'images/puzzle2/p2-fliped1.jpg'
+                ],
+                [
+                    'images/puzzle3/p3-fliped3.jpg',
+                    'images/puzzle3/p3-fliped2.jpg',
+                    'images/puzzle3/p3-fliped1.jpg'
+                ],
+                [
+                    'images/puzzle4/p4-fliped3.jpg',
+                    'images/puzzle4/p4-fliped2.jpg',
+                    'images/puzzle4/p4-fliped1.jpg'
+                ]
+            ];
+
+            var finalAnimationFrames = [
+                'url("images/final1.jpg")',
+                'url("images/final2.jpg")',
+                'url("images/final3.jpg")',
+                'url("images/final4.jpg")'
+            ];
+
+            // identify which piece is the the subject of a drag-and-drop
+            var findPieceIndex = function(event) {
+                // figure out which region was clicked
+                for (var pieceIndex = 0; pieceIndex < puzzleContents[currentPuzzle].length; pieceIndex++) {
+                    if (puzzleContents[currentPuzzle][pieceIndex] == event.target) {
+                        return pieceIndex;
+                    }
+                }
+
+                return null;
+            }
+
+            // finishing animation for a single stamp
+            var finishStamp = function(index) {
+                var frames = stampFinishFrames[currentPuzzle];
+
+                if (index == frames.length) {
+                    return;
+                }
+
+                stamps[currentPuzzle].src = frames[index];
+
+                setTimeout(() => finishStamp(index + 1), 300);
+            }
+
+            var dragEvent = function(event) {
+                event.stopPropagation();
+
+                if (animating || solved) {
+                    return;
+                }
+
+                // hide image being dragged before release
+                setTimeout(() => (event.target.style.visibility = 'hidden'), 0);
+
+                if (dragOffset.length == 0) {
+                    dragOffset = [event.offsetX, event.offsetY];
+                }
+            }
+
+            var dropEvent = function(event) {
+                event.stopPropagation();
+
+                var xPosition = event.screenX - window.screenX - puzzle.offsetLeft - 2 * dragOffset[0] + 2;
+                var yPosition = event.screenY - window.screenY - puzzle.offsetTop - puzzle.offsetHeight / 2 + event.target.height - 2 * dragOffset[1] - 6;
+
+                var xMax = puzzle.offsetWidth - event.target.width;
+                var yMax = puzzle.offsetHeight - event.target.height;
+
+                var xUpdated = Math.max(0, Math.min(xPosition, xMax));
+                var yUpdated = Math.max(0, Math.min(yPosition, yMax));
+
+                var pieceIndex = findPieceIndex(event);
+                var piece = puzzleData[currentPuzzle][pieceIndex];
+
+                var xClose = Math.abs(xUpdated - piece.end[0]) < 5;
+                var yClose = Math.abs(yUpdated - piece.end[1]) < 5;
+
+                piece.lockedIn = (xClose && yClose);
+
+                if (piece.lockedIn) {
+                    // close enough; just move the piece where it belongs
+                    xUpdated = piece.end[0];
+                    yUpdated = piece.end[1];
+                }
+
+                // reposition dropped image and make visible again
+                event.target.style.left = xUpdated + 'px';
+                event.target.style.top = yUpdated + 'px';
+                event.target.style.visibility = 'visible';
+
+                dragOffset = [];
+            }
+
+            // show a frame in the final animation
+            var showFinalFrame = function(index) {
+                if (index == finalAnimationFrames.length) {
+                    return;
+                }
+
+                workArea.style.backgroundImage = finalAnimationFrames[index];
+
+                setTimeout(() => showFinalFrame(index + 1), 230);
+            }
+
+            // show the final animation after solving all puzzles
+            var finalAnimation = function() {
+                workArea.style.backgroundImage = finalAnimationFrames[0];
+
+                setTimeout(() => {
+                    endingAudio.play();
+
+                    setTimeout(() => showFinalFrame(0), 50);
+                }, 300);
+            }
+
+            // show the work area stamping the page
+            var puzzleForwardAnimation = function(index) {
+                var frames = stampFrames[currentPuzzle];
+
+                if (index == frames.length) {
+                    puzzleBackwardAnimation(index);
+
+                    return;
+                }
+
+                puzzle.style.backgroundImage = frames[index];
+
+                setTimeout(() => puzzleForwardAnimation(index + 1), 300);
+            }
+
+            // show the work area returning to its original position
+            var puzzleBackwardAnimation = function(index) {
+                var frames = stampFrames[currentPuzzle];
+
+                if (index == 0) {
+                    finishStamp(0);
+
+                    setTimeout(() => {
+                        currentPuzzle++;
+
+                        if (currentPuzzle == puzzleContents.length) {
+                            gameOver = true;
+
+                            finalAnimation();
+                        } else {
+                            // load up the next puzzle
+                            for (var pieceIndex = 0; pieceIndex < puzzleContents[currentPuzzle].length; pieceIndex++) {
+                                var piece = puzzleContents[currentPuzzle][pieceIndex];
+
+                                puzzle.appendChild(piece);
+                            }
+
+                            puzzle.style.backgroundImage = 'url("images/back.jpg")';
+                            workArea.style.backgroundImage = null;
+                        }
+
+                        animating = false;
+                    }, 901);
+
+                    return;
+                }
+
+                puzzle.style.backgroundImage = frames[index - 1];
+
+                setTimeout(() => puzzleBackwardAnimation(index - 1), 270);
+            }
+
+            // solved puzzle animation
+            var animate = function() {
+                solved = false;
+
+                if (gameOver) {
+                    return;
+                }
+
+                // clear screen
+                button.style.backgroundImage = null;
+
+                for (var pieceIndex = 0; pieceIndex < puzzleContents[currentPuzzle].length; pieceIndex++) {
+                    var piece = puzzleContents[currentPuzzle][pieceIndex];
+
+                    puzzle.removeChild(piece);
+                }
+
+                puzzle.style.backgroundImage = stampFrames[currentPuzzle][0];
+
+                setTimeout(() => {
+                    buttonClickCorrect.play();
+
+                    setTimeout(() => puzzleForwardAnimation(0), 50);
+                }, 300);
+            }
+
+            workArea.addEventListener('mousedown', function(event) {
+                if (gameOver && !animating) {
+                    window.open('p5_cookie.cgi');
+                }
+            });
+
+            button.addEventListener('mousedown', function(event) {
+                if (!animating) {
+                    button.style.backgroundImage = 'url("images/action.gif")';
+                }
+            });
+
+            button.addEventListener('mouseup', function(event) {
+                if (animating || solved) {
+                    return;
+                }
+
+                var didSolve = true;
+
+                for (var pieceIndex = 0; pieceIndex < puzzleData[currentPuzzle].length; pieceIndex++) {
+                    var piece = puzzleData[currentPuzzle][pieceIndex];
+
+                    if (piece.goodness != piece.lockedIn) {
+                        didSolve = false;
+                    }
+                }
+
+                if (didSolve) {
+                    solved = true;
+                    animating = true;
+
+                    animate();
+                } else {
+                    buttonClickIncorrect.play();
+
+                    button.style.backgroundImage = null;
+                }
+            });
+
+            window.onload = function(event) {
+                // dynamically create img tags for each puzzle piece; there are so many!
+                for (var puzzleIndex = 0; puzzleIndex < puzzleData.length; puzzleIndex++) {
+                    puzzleContents[puzzleIndex] = [];
+
+                    for (var pieceIndex = 0; pieceIndex < puzzleData[puzzleIndex].length; pieceIndex++) {
+                        var piece = puzzleData[puzzleIndex][pieceIndex];
+
+                        var element = document.createElement('img');
+                        element.src = piece.image;
+                        element.style.position = 'absolute';
+                        element.style.top = piece.start[1] + 'px';
+                        element.style.left = piece.start[0] + 'px';
+                        element.style.width = element.width + 'px';
+                        element.style.height = element.height + 'px';
+                        element.draggable = 'true';
+                        element.addEventListener('dragstart', dragEvent);
+                        element.addEventListener('drag', dragEvent);
+                        element.addEventListener('dragend', dropEvent);
+                        element.addEventListener('drop', dropEvent);
+
+                        puzzleContents[puzzleIndex][pieceIndex] = element;
+
+                        if (puzzleIndex == 0) {
+                            puzzle.appendChild(element);
+                        }
+                    }
+                }
+            }
+
+            function loadPuzzleData() {
+                // TODO: Extract to its own json file?
+                return [
+                    // puzzle 1
+                    [
+                        { 'start': [  13,  11 ], 'end': [ 108,  25 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle1/p1-yest1.gif' },
+                        { 'start': [  23,  85 ], 'end': [ 118,  25 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle1/p1-yest2.gif' },
+                        { 'start': [ 227,  58 ], 'end': [ 128,  25 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle1/p1-yest3.gif' },
+                        { 'start': [ 180,  60 ], 'end': [ 108,  50 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle1/p1-yest4.gif' },
+                        { 'start': [  45,  53 ], 'end': [  78,  80 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle1/p1-yest5.gif' },
+                        { 'start': [ 206,  14 ], 'end': [ 108,  70 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle1/p1-yest6.gif' },
+                        { 'start': [ 178,  14 ], 'end': [ 148,  80 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle1/p1-yest7.gif' },
+                        { 'start': [  24,  14 ], 'end': [ 128,  65 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle1/p1-not1.gif' },
+                        { 'start': [ 217,  68 ], 'end': [ 108,  65 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle1/p1-not2.gif' },
+                        { 'start': [  39,  96 ], 'end': [ 108,  65 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle1/p1-not3.gif' },
+                        { 'start': [  36,  13 ], 'end': [ 148,  25 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle1/p1-not4.gif' },
+                        { 'start': [ 178,  98 ], 'end': [ 108,  40 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle1/p1-not5.gif' },
+                        { 'start': [   7,  98 ], 'end': [  78,  25 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle1/p1-not6.gif' }
+                    ],
+
+                    // puzzle 2
+                    [
+                        { 'start': [  47, 100 ], 'end': [  83,  40 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle2/p2-yest1.gif' },
+                        { 'start': [  50,  39 ], 'end': [ 118,  35 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle2/p2-yest2.gif' },
+                        { 'start': [ 174,  17 ], 'end': [ 138,  40 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle2/p2-yest3.gif' },
+                        { 'start': [   3,  83 ], 'end': [  78,  55 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle2/p2-yest4.gif' },
+                        { 'start': [  40,  10 ], 'end': [  83,  60 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle2/p2-yest5.gif' },
+                        { 'start': [ 207,  13 ], 'end': [  88,  60 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle2/p2-yest6.gif' },
+                        { 'start': [  12,  13 ], 'end': [ 133,  60 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle2/p2-yest7.gif' },
+                        { 'start': [ 173,  69 ], 'end': [ 138,  60 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle2/p2-yest8.gif' },
+                        { 'start': [ 238,  69 ], 'end': [ 163,  55 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle2/p2-yest9.gif' },
+                        { 'start': [ 237,   3 ], 'end': [  78,  25 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle2/p2-not1.gif' },
+                        { 'start': [ 223, 100 ], 'end': [  83,  40 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle2/p2-not2.gif' },
+                        { 'start': [  13,  82 ], 'end': [  88,  25 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle2/p2-not3.gif' },
+                        { 'start': [ 200,  81 ], 'end': [ 133,  25 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle2/p2-not4.gif' },
+                        { 'start': [  43,  57 ], 'end': [ 138,  40 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle2/p2-not5.gif' },
+                        { 'start': [   3,  19 ], 'end': [ 163,  25 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle2/p2-not6.gif' },
+                        { 'start': [ 175,  43 ], 'end': [  83,  80 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle2/p2-not7.gif' },
+                        { 'start': [  44, 121 ], 'end': [ 138,  80 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle2/p2-not8.gif' }
+                    ],
+
+                    // puzzle 3
+                    [
+                        { 'start': [   9,  12 ], 'end': [  93,  25 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle3/p3-yest1.gif' },
+                        { 'start': [ 194,  94 ], 'end': [ 123,  30 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle3/p3-yest2.gif' },
+                        { 'start': [ 212,  51 ], 'end': [ 143,  25 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle3/p3-yest3.gif' },
+                        { 'start': [   5,  60 ], 'end': [ 143,  40 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle3/p3-yest4.gif' },
+                        { 'start': [  38,  60 ], 'end': [  78,  65 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle3/p3-yest5.gif' },
+                        { 'start': [ 181,   4 ], 'end': [  78,  75 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle3/p3-yest6.gif' },
+                        { 'start': [ 220,  94 ], 'end': [ 103,  70 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle3/p3-yest7.gif' },
+                        { 'start': [   2,  12 ], 'end': [ 143,  75 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle3/p3-yest8.gif' },
+                        { 'start': [ 181,  51 ], 'end': [  78,  25 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle3/p3-not1.gif' },
+                        { 'start': [   6,  96 ], 'end': [  78,  40 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle3/p3-not2.gif' },
+                        { 'start': [  49,  12 ], 'end': [ 103,  90 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle3/p3-not3.gif' },
+                        { 'start': [  25,  12 ], 'end': [ 123,  70 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle3/p3-not4.gif' },
+                        { 'start': [  38, 100 ], 'end': [ 143,  65 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle3/p3-not5.gif' },
+                        { 'start': [ 212,   4 ], 'end': [ 143,  75 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle3/p3-not6.gif' }
+                    ],
+
+                    // puzzle 4
+                    [
+                        { 'start': [   4,  16 ], 'end': [  78,  25 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle4/p4-yest1.gif' },
+                        { 'start': [  24,  88 ], 'end': [ 123,  25 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle4/p4-yest2.gif' },
+                        { 'start': [ 222, 105 ], 'end': [ 143,  25 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle4/p4-yest3.gif' },
+                        { 'start': [ 236,   4 ], 'end': [ 163,  25 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle4/p4-yest4.gif' },
+                        { 'start': [  45,  53 ], 'end': [ 123,  40 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle4/p4-yest5.gif' },
+                        { 'start': [ 182,  13 ], 'end': [  93,  60 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle4/p4-yest6.gif' },
+                        { 'start': [   6,  98 ], 'end': [ 153,  60 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle4/p4-yest7.gif' },
+                        { 'start': [  24,  57 ], 'end': [  78,  90 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle4/p4-yest8.gif' },
+                        { 'start': [ 200,  74 ], 'end': [ 148,  90 ], 'goodness': true, 'lockedIn': false, 'image': 'images/puzzle4/p4-yest9.gif' },
+                        { 'start': [  46, 110 ], 'end': [  78,  30 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle4/p4-not1.gif' },
+                        { 'start': [ 224,  74 ], 'end': [ 148,  25 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle4/p4-not2.gif' },
+                        { 'start': [ 189, 110 ], 'end': [  93,  50 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle4/p4-not3.gif' },
+                        { 'start': [   6,  50 ], 'end': [ 153,  50 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle4/p4-not4.gif' },
+                        { 'start': [  24, 110 ], 'end': [ 123,  75 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle4/p4-not5.gif' },
+                        { 'start': [ 179,  71 ], 'end': [ 143,  80 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle4/p4-not6.gif' },
+                        { 'start': [ 182,   5 ], 'end': [  78, 105 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle4/p4-not7.gif' },
+                        { 'start': [  31, 114 ], 'end': [ 123,  95 ], 'goodness': false, 'lockedIn': false, 'image': 'images/puzzle4/p4-not8.gif' }
+                    ]
+                ];
+            }
+        </script>
     </body>
 </html>
